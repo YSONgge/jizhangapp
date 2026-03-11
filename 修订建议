@@ -1,0 +1,117 @@
+🔴 高优先级问题（必须立即处理）
+1. 数据库事务缺失 - 严重的数据一致性风险
+位置：database_helper.dart:871-885, 925-952, 954-976
+
+问题：交易操作和余额更新不在同一事务中，如果插入失败，余额已更新无法回滚。
+
+建议：必须使用数据库事务包装整个操作。
+
+2. 错误处理不当 - 应用可能在异常状态下运行
+位置：main.dart:21-36
+
+问题：数据库初始化失败后只打印日志，继续运行可能导致后续崩溃。
+
+建议：初始化失败时应该显示错误页面并退出应用。
+
+3. 文件过大导致维护困难
+位置：
+
+database_helper.dart：1847行
+text_parser.dart：59.66 KB
+statistics_screen.dart：2299行
+问题：单个文件过大，包含多种职责，难以维护和测试。
+
+建议：必须拆分为多个小文件，每个文件单一职责。
+
+🟡 中优先级问题（应该处理）
+4. 缺少数据验证
+位置：所有插入和更新操作
+
+问题：没有对金额、日期等输入数据进行验证，可能导致非法数据进入数据库。
+
+5. 性能优化缺失
+位置：transaction_provider.dart:19-33
+
+问题：
+
+每次都加载所有交易记录（不分页）
+statistics_screen.dart 在 build 方法中直接查询数据库
+文本解析遍历大量关键词（1000+行）
+6. 代码重复严重
+位置：多个 Provider 的 getById、getByName 方法
+
+问题：重复代码增加了维护成本。
+
+建议：创建泛型基类 BaseProvider<T> 消除重复。
+
+7. 目录结构混乱
+位置：lib/models/ 和 lib/data/models/ 重复
+
+问题：相同的模型定义放在两个不同的目录。
+
+建议：统一使用 lib/models/ 目录。
+
+🟢 低优先级问题（可以优化）
+8. 命名不规范
+位置：整个项目
+
+问题：
+
+中英文混用
+魔法数字（如 int _selectedPeriodType = 2;）
+魔法字符串（如硬编码的分类名称）
+9. 过度使用单例模式
+位置：整个项目
+
+问题：
+
+DatabaseHelper.instance
+BackupService.instance
+ExportService.instance
+缺点：
+
+单元测试困难，无法 mock
+全局状态难以控制
+10. 空 catch 块过多
+位置：database_helper.dart:36-38 等多处
+
+dart
+catch (e) {
+  // 列可能已存在，忽略错误
+}
+问题：至少应该记录日志，便于排查问题。
+
+11. 金额精度问题
+位置：所有金额相关代码
+
+问题：使用 double 进行金额计算可能导致精度丢失。
+
+建议：考虑使用整数（分）或专门的货币类型。
+
+12. 边界条件处理不准确
+位置：transaction_provider.dart:66-77
+
+问题：日期比较使用 isAfter 和 isBefore，会排除边界时间点。
+
+建议：使用 isAfterOrEqual 和 isBeforeOrEqual。
+
+13. firstWhere 缺少 orElse 会导致异常
+位置：backup_service.dart:177 等多处
+
+dart
+final record = records.firstWhere((r) => r['id'] == id);
+// 找不到会抛出异常
+14. 缺少加载状态管理
+位置：多个 Provider
+
+问题：每次加载数据都会通知两次（开始和结束）。
+
+15. 缺少单元测试
+问题：整个项目没有单元测试。
+
+建议：至少为关键业务逻辑添加测试。
+
+16. 缺少日志管理
+位置：整个项目使用 debugPrint
+
+问题：缺少统一的日志管理系统。
