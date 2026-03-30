@@ -44,6 +44,7 @@ class TextParser {
   static List<String> _userOwners = [];
   static List<String> _userMerchants = [];
   static List<Map<String, dynamic>> _userAccounts = [];
+  static List<String> _userCustomCategoryKeywords = [];
   static bool _isInitialized = false;
 
   static Future<void> initialize() async {
@@ -56,6 +57,12 @@ class TextParser {
       final merchants = await DatabaseHelper.instance.getAllMerchants();
       _userMerchants = merchants.map((m) => m['name'] as String).toList();
       
+      final categories = await DatabaseHelper.instance.getAllCategories();
+      _userCustomCategoryKeywords = categories
+          .where((c) => c.isCustom)
+          .map((c) => c.name)
+          .toList();
+      
       _isInitialized = true;
     } catch (e) {
       debugPrint('TextParser初始化失败: $e');
@@ -66,12 +73,16 @@ class TextParser {
     List<String>? owners,
     List<String>? merchants,
     List<Map<String, dynamic>>? accounts,
+    List<String>? customCategories,
   }) {
     if (owners != null) _userOwners = owners;
     if (merchants != null) _userMerchants = merchants;
     if (accounts != null) _userAccounts = accounts;
+    if (customCategories != null) _userCustomCategoryKeywords = customCategories;
     _isInitialized = true;
   }
+
+  static List<String> get customCategoryKeywords => _userCustomCategoryKeywords;
 
   // 支出分类关键词映射（对应二级分类名称）
   static const Map<String, List<String>> expenseCategoryKeywords = {
@@ -933,6 +944,13 @@ class TextParser {
   }
 
   String? _matchCategory(String text, TransactionType type) {
+    // 首先匹配用户自定义分类（优先级最高）
+    for (var keyword in _userCustomCategoryKeywords) {
+      if (text.contains(keyword)) {
+        return keyword;
+      }
+    }
+
     Map<String, List<String>> keywords = type == TransactionType.income
         ? incomeCategoryKeywords
         : expenseCategoryKeywords;
@@ -1382,8 +1400,17 @@ class TextParser {
           if (dateMatch != null) {
             int month = int.parse(dateMatch.group(1)!);
             int day = int.parse(dateMatch.group(2)!);
-            // 简单的合理性检查：月份1-12，日期1-31
-            if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+            String matchedStr = dateMatch.group(0)!;
+            
+            // 检查匹配的数字后面是否紧跟金额关键词
+            // 如果是"3.2元"、"3块2"、"花了3.2"等，应该作为金额处理，不是日期
+            int matchEnd = dateMatch.end;
+            String afterMatch = text.substring(matchEnd).replaceAll(' ', '');
+            final amountKeywords = ['元', '块', '块钱', '毛', '角', '分', '花了', '付了', '给了', '出了', '用了', '支付', '付款', '消费', '买了', '价格', '价钱', '金额'];
+            bool hasAmountContext = amountKeywords.any((keyword) => afterMatch.startsWith(keyword));
+            
+            // 如果没有金额上下文，且月份和日期合理，则识别为日期
+            if (!hasAmountContext && month >= 1 && month <= 12 && day >= 1 && day <= 31) {
               int year = now.year;
               if (month > now.month) {
                 // 可能是去年

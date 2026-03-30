@@ -278,10 +278,27 @@ class ImportService {
           merchantMap['created_at'] = DateTime.now().toIso8601String();
         }
         
-        if (mode == ImportMode.skipExisting || mode == ImportMode.merge) {
+        if (mode == ImportMode.skipExisting) {
           final existingMerchants = await _db.getAllMerchants();
           final exists = existingMerchants.any((m) => m['name'] == merchantMap['name']);
           if (exists) {
+            success++;
+            continue;
+          }
+        }
+        
+        if (mode == ImportMode.merge || mode == ImportMode.replace) {
+          final existingMerchants = await _db.getAllMerchants();
+          final existingById = existingMerchants.any((m) => m['id'] == merchantMap['id']);
+          final existingByName = existingMerchants.any((m) => m['name'] == merchantMap['name']);
+          
+          if (existingById) {
+            await _db.updateMerchant(merchantMap['id'], merchantMap);
+            success++;
+            continue;
+          } else if (existingByName) {
+            final existingMerchant = existingMerchants.firstWhere((m) => m['name'] == merchantMap['name']);
+            await _db.updateMerchant(existingMerchant['id'], merchantMap);
             success++;
             continue;
           }
@@ -318,10 +335,27 @@ class ImportService {
           ownerMap['created_at'] = DateTime.now().toIso8601String();
         }
         
-        if (mode == ImportMode.skipExisting || mode == ImportMode.merge) {
+        if (mode == ImportMode.skipExisting) {
           final existingOwners = await _db.getAllOwners();
           final exists = existingOwners.any((o) => o['name'] == ownerMap['name']);
           if (exists) {
+            success++;
+            continue;
+          }
+        }
+        
+        if (mode == ImportMode.merge || mode == ImportMode.replace) {
+          final existingOwners = await _db.getAllOwners();
+          final existingById = existingOwners.any((o) => o['id'] == ownerMap['id']);
+          final existingByName = existingOwners.any((o) => o['name'] == ownerMap['name']);
+          
+          if (existingById) {
+            await _db.updateOwner(ownerMap['id'], ownerMap);
+            success++;
+            continue;
+          } else if (existingByName) {
+            final existingOwner = existingOwners.firstWhere((o) => o['name'] == ownerMap['name']);
+            await _db.updateOwner(existingOwner['id'], ownerMap);
             success++;
             continue;
           }

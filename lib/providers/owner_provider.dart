@@ -46,7 +46,10 @@ class OwnerProvider with ChangeNotifier {
   }
 
   Future<void> deleteOwner(String id) async {
-    final account = _owners.firstWhere((o) => o['id'] == id);
+    final account = _owners.firstWhere(
+      (o) => o['id'] == id,
+      orElse: () => throw Exception('归属人不存在'),
+    );
     if (account['is_default'] == 1) {
       throw Exception('默认归属人不能删除');
     }

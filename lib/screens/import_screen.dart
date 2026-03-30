@@ -256,7 +256,7 @@ class _ImportScreenState extends State<ImportScreen> {
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, -2),
                 ),
@@ -325,7 +325,7 @@ class _ImportScreenState extends State<ImportScreen> {
         margin: EdgeInsets.only(bottom: 8.h),
         decoration: BoxDecoration(
           color: isSelected
-              ? (isDanger ? Colors.red[50] : Theme.of(context).primaryColor.withOpacity(0.1))
+              ? (isDanger ? Colors.red[50] : Theme.of(context).primaryColor.withValues(alpha: 0.1))
               : Colors.grey[50],
           borderRadius: BorderRadius.circular(8.r),
           border: Border.all(

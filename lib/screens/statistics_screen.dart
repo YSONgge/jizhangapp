@@ -970,6 +970,23 @@ class _CategoryViewState extends State<_CategoryView> {
   int _chartType = 0; // 0: 饼图, 1: 条形图, 2: 列表
   int _transactionType = 0; // 0: 支出, 1: 收入
 
+  String _getPeriodLabel() {
+    switch (widget.selectedPeriodType) {
+      case 0:
+        return '本日';
+      case 1:
+        return '本周';
+      case 2:
+        return '本月';
+      case 3:
+        return '本季度';
+      case 4:
+        return '本年';
+      default:
+        return '本月';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
@@ -1049,11 +1066,11 @@ class _CategoryViewState extends State<_CategoryView> {
                 child: Column(
                   children: [
                     if (_chartType == 0)
-                      _SimplePieChart(data: data, transactionType: _transactionType)
+                      _SimplePieChart(data: data, transactionType: _transactionType, selectedPeriodType: widget.selectedPeriodType)
                     else if (_chartType == 1)
                       _BarChart(data: data, transactionType: _transactionType)
                     else
-                      _CategoryListView(data: data, transactionType: _transactionType),
+                      _CategoryListView(data: data, transactionType: _transactionType, selectedPeriodType: widget.selectedPeriodType),
                   ],
                 ),
               ),
@@ -1826,8 +1843,26 @@ class _SimpleSummaryCards extends StatelessWidget {
 class _SimplePieChart extends StatelessWidget {
   final Map<String, dynamic>? data;
   final int transactionType;
+  final int selectedPeriodType;
 
-  const _SimplePieChart({this.data, required this.transactionType});
+  const _SimplePieChart({this.data, required this.transactionType, required this.selectedPeriodType});
+
+  String _getPeriodLabel() {
+    switch (selectedPeriodType) {
+      case 0:
+        return '本日';
+      case 1:
+        return '本周';
+      case 2:
+        return '本月';
+      case 3:
+        return '本季度';
+      case 4:
+        return '本年';
+      default:
+        return '本月';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1904,7 +1939,7 @@ class _SimplePieChart extends StatelessWidget {
             children: [
               Text(isExpense ? '支出分类' : '收入分类', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600)),
               const Spacer(),
-              Text('${isExpense ? '本月支出' : '本月收入'}: ¥${total.toStringAsFixed(2)}', style: TextStyle(fontSize: 14.sp, color: isExpense ? Colors.red : Colors.green, fontWeight: FontWeight.w500)),
+              Text('${isExpense ? _getPeriodLabel() + '支出' : _getPeriodLabel() + '收入'}: ¥${total.toStringAsFixed(2)}', style: TextStyle(fontSize: 14.sp, color: isExpense ? Colors.red : Colors.green, fontWeight: FontWeight.w500)),
             ],
           ),
           SizedBox(height: 16.h),
@@ -1969,8 +2004,26 @@ class _SimplePieChart extends StatelessWidget {
 class _CategoryListView extends StatelessWidget {
   final Map<String, dynamic>? data;
   final int transactionType;
+  final int selectedPeriodType;
 
-  const _CategoryListView({this.data, required this.transactionType});
+  const _CategoryListView({this.data, required this.transactionType, required this.selectedPeriodType});
+
+  String _getPeriodLabel() {
+    switch (selectedPeriodType) {
+      case 0:
+        return '本日';
+      case 1:
+        return '本周';
+      case 2:
+        return '本月';
+      case 3:
+        return '本季度';
+      case 4:
+        return '本年';
+      default:
+        return '本月';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -2022,7 +2075,7 @@ class _CategoryListView extends StatelessWidget {
                 children: [
                   Text('分类详情', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600)),
                   const Spacer(),
-                  Text(isExpense ? '本月支出: ¥${total.toStringAsFixed(2)}' : '本月收入: ¥${total.toStringAsFixed(2)}', style: TextStyle(fontSize: 14.sp, color: isExpense ? Colors.red : Colors.green)),
+                  Text(isExpense ? '${_getPeriodLabel()}支出: ¥${total.toStringAsFixed(2)}' : '${_getPeriodLabel()}收入: ¥${total.toStringAsFixed(2)}', style: TextStyle(fontSize: 14.sp, color: isExpense ? Colors.red : Colors.green)),
                 ],
               ),
               SizedBox(height: 16.h),

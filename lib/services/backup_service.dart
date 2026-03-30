@@ -174,7 +174,10 @@ class BackupService {
   Future<bool> deleteBackup(String id) async {
     try {
       final records = await _db.getAllBackupRecords();
-      final record = records.firstWhere((r) => r['id'] == id);
+      final record = records.firstWhere(
+        (r) => r['id'] == id,
+        orElse: () => throw Exception('备份记录不存在'),
+      );
       
       final file = File(record['file_path'] as String);
       if (await file.exists()) {

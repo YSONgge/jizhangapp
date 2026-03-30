@@ -6,10 +6,12 @@ class CategoryProvider with ChangeNotifier {
   List<models.Category> _categories = [];
   bool _isLoading = false;
   String? _error;
+  List<String> _customCategoryKeywords = [];
 
   List<models.Category> get categories => _categories;
   bool get isLoading => _isLoading;
   String? get error => _error;
+  List<String> get customCategoryKeywords => _customCategoryKeywords;
 
   // 根据类型筛选分类（支出/收入）
   List<models.Category> getExpenseCategories() {
@@ -92,5 +94,50 @@ class CategoryProvider with ChangeNotifier {
       return null;
     }
     return getCategoryById(category!.parentId!);
+  }
+
+  // 获取用户自定义分类
+  List<models.Category> getCustomCategories() {
+    return _categories.where((cat) => cat.isCustom).toList();
+  }
+
+  // 获取用户自定义二级分类（指定父分类）
+  List<models.Category> getCustomChildCategories(String parentId) {
+    return _categories.where((cat) => cat.parentId == parentId && cat.isCustom).toList();
+  }
+
+  // 添加自定义分类
+  Future<void> addCustomCategory(models.Category category) async {
+    final customCategory = category.copyWith(isCustom: true);
+    await DatabaseHelper.instance.insertCategory(customCategory);
+    await loadCategories();
+  }
+
+  // 更新自定义分类
+  Future<void> updateCustomCategory(models.Category category) async {
+    if (!category.isCustom) {
+      throw Exception('只能更新自定义分类');
+    }
+    final db = DatabaseHelper.instance;
+    await db.updateCategory(category);
+    await loadCategories();
+  }
+
+  // 删除自定义分类
+  Future<void> deleteCustomCategory(String categoryId) async {
+    final category = getCategoryById(categoryId);
+    if (category == null || !category.isCustom) {
+      throw Exception('只能删除自定义分类');
+    }
+    final db = DatabaseHelper.instance;
+    await db.deleteCategory(categoryId);
+    await loadCategories();
+  }
+
+  // 加载自定义分类关键词
+  Future<void> loadCustomKeywords() async {
+    final customCategories = getCustomCategories();
+    _customCategoryKeywords = customCategories.map((c) => c.name).toList();
+    notifyListeners();
   }
 }

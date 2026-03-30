@@ -1,5 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:flutter/foundation.dart';
 import 'package:expense_tracker/data/models/transaction.dart' as models;
 import 'package:expense_tracker/data/models/category.dart' as models;
 import 'package:expense_tracker/data/models/account.dart' as models;
@@ -34,7 +35,7 @@ class DatabaseHelper {
       }
       await db.execute("ALTER TABLE transactions ADD COLUMN target_account_id TEXT");
     } catch (e) {
-      // 列可能已存在，忽略错误
+      debugPrint('确保列存在时出错（可能列已存在）: $e');
     }
   }
 
@@ -44,7 +45,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 6,
+      version: 8,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
     );
@@ -83,7 +84,8 @@ class DatabaseHelper {
         icon TEXT NOT NULL,
         color TEXT NOT NULL,
         sort_order INTEGER DEFAULT 0,
-        parent_id TEXT
+        parent_id TEXT,
+        is_custom INTEGER DEFAULT 0
       )
     ''');
 
@@ -188,7 +190,7 @@ class DatabaseHelper {
       try {
         await db.execute("ALTER TABLE accounts ADD COLUMN category TEXT NOT NULL DEFAULT '现金'");
       } catch (e) {
-        // 列可能已存在,忽略错误
+        debugPrint('添加 category 列时出错（可能列已存在）: $e');
       }
       await db.delete('accounts'); // 删除所有旧账户
       await _initDefaultAccounts(db); // 重新初始化账户
@@ -281,7 +283,7 @@ class DatabaseHelper {
       try {
         await db.execute("ALTER TABLE transactions ADD COLUMN target_account_id TEXT");
       } catch (e) {
-        // 列可能已存在，忽略错误
+        debugPrint('添加 target_account_id 列时出错（可能列已存在）: $e');
       }
     }
 
@@ -302,6 +304,48 @@ class DatabaseHelper {
         ''');
       } catch (e) {
         // 表已存在，忽略错误
+      }
+    }
+
+    // 从版本6升级到版本7: 添加 is_custom 字段到分类表
+    if (oldVersion < 7) {
+      try {
+        await db.execute("ALTER TABLE categories ADD COLUMN is_custom INTEGER DEFAULT 0");
+      } catch (e) {
+        debugPrint('添加 is_custom 列时出错（可能列已存在）: $e');
+      }
+    }
+
+    // 从版本7升级到版本8: 修复分类ID，将投资收益从支出移到收入
+    if (oldVersion < 8) {
+      try {
+        // 更新父分类ID
+        await db.rawUpdate(
+          "UPDATE categories SET id = 'cat_inc_inv' WHERE id = 'cat_inv'",
+        );
+        // 更新子分类的parent_id
+        await db.rawUpdate(
+          "UPDATE categories SET parent_id = 'cat_inc_inv' WHERE parent_id = 'cat_inv'",
+        );
+        // 更新子分类ID
+        await db.rawUpdate(
+          "UPDATE categories SET id = 'cat_inc_inv_001' WHERE id = 'cat_inv_001'",
+        );
+        await db.rawUpdate(
+          "UPDATE categories SET id = 'cat_inc_inv_002' WHERE id = 'cat_inv_002'",
+        );
+        await db.rawUpdate(
+          "UPDATE categories SET id = 'cat_inc_inv_003' WHERE id = 'cat_inv_003'",
+        );
+        await db.rawUpdate(
+          "UPDATE categories SET id = 'cat_inc_inv_004' WHERE id = 'cat_inv_004'",
+        );
+        await db.rawUpdate(
+          "UPDATE categories SET id = 'cat_inc_inv_005' WHERE id = 'cat_inv_005'",
+        );
+        debugPrint('分类ID迁移完成');
+      } catch (e) {
+        debugPrint('分类ID迁移时出错: $e');
       }
     }
   }
@@ -333,7 +377,7 @@ class DatabaseHelper {
     final incomeParentCategories = [
       {'id': 'cat_inc_wage', 'name': '工资收入', 'icon': 'payments', 'color': '#FFD93D', 'sort': 0},
       {'id': 'cat_inc_bus', 'name': '经营收入', 'icon': 'store', 'color': '#6BCB77', 'sort': 1},
-      {'id': 'cat_inv', 'name': '投资收益', 'icon': 'trending_up', 'color': '#4D96FF', 'sort': 2},
+      {'id': 'cat_inc_inv', 'name': '投资收益', 'icon': 'trending_up', 'color': '#4D96FF', 'sort': 2},
       {'id': 'cat_inc_pt', 'name': '兼职副业', 'icon': 'work', 'color': '#FF6B6B', 'sort': 3},
       {'id': 'cat_inc_refund', 'name': '退款返还', 'icon': 'refund', 'color': '#4ECDC4', 'sort': 4},
       {'id': 'cat_inc_other', 'name': '其他收入', 'icon': 'attach_money', 'color': '#95E1D3', 'sort': 5},
@@ -546,11 +590,11 @@ class DatabaseHelper {
 
     // 3. 投资收益
     final investmentIncomeCategories = [
-      {'id': 'cat_inv_001', 'name': '利息', 'icon': 'percent', 'color': '#FF6B6B', 'sort': 0, 'parent': 'cat_inv'},
-      {'id': 'cat_inv_002', 'name': '分红', 'icon': 'account_balance', 'color': '#4ECDC4', 'sort': 1, 'parent': 'cat_inv'},
-      {'id': 'cat_inv_003', 'name': '基金收益', 'icon': 'show_chart', 'color': '#95E1D3', 'sort': 2, 'parent': 'cat_inv'},
-      {'id': 'cat_inv_004', 'name': '股票收益', 'icon': 'candlestick_chart', 'color': '#AA96DA', 'sort': 3, 'parent': 'cat_inv'},
-      {'id': 'cat_inv_005', 'name': '理财收益', 'icon': 'account_balance_wallet', 'color': '#FCBAD3', 'sort': 4, 'parent': 'cat_inv'},
+      {'id': 'cat_inc_inv_001', 'name': '利息', 'icon': 'percent', 'color': '#FF6B6B', 'sort': 0, 'parent': 'cat_inc_inv'},
+      {'id': 'cat_inc_inv_002', 'name': '分红', 'icon': 'account_balance', 'color': '#4ECDC4', 'sort': 1, 'parent': 'cat_inc_inv'},
+      {'id': 'cat_inc_inv_003', 'name': '基金收益', 'icon': 'show_chart', 'color': '#95E1D3', 'sort': 2, 'parent': 'cat_inc_inv'},
+      {'id': 'cat_inc_inv_004', 'name': '股票收益', 'icon': 'candlestick_chart', 'color': '#AA96DA', 'sort': 3, 'parent': 'cat_inc_inv'},
+      {'id': 'cat_inc_inv_005', 'name': '理财收益', 'icon': 'account_balance_wallet', 'color': '#FCBAD3', 'sort': 4, 'parent': 'cat_inc_inv'},
     ];
 
     // 4. 兼职副业
@@ -871,17 +915,18 @@ class DatabaseHelper {
   Future<int> insertTransaction(models.Transaction transaction) async {
     final db = await instance.database;
     
-    // 更新账户余额（调整类型不更新余额，因为是直接设置余额）
-    if (transaction.type == TransactionType.expense) {
-      await updateAccountBalance(transaction.accountId, -transaction.amount);
-    } else if (transaction.type == TransactionType.income) {
-      await updateAccountBalance(transaction.accountId, transaction.amount);
-    } else if (transaction.type == TransactionType.transfer && transaction.targetAccountId != null) {
-      await updateAccountBalance(transaction.accountId, -transaction.amount);
-      await updateAccountBalance(transaction.targetAccountId!, transaction.amount);
-    }
-    
-    return await db.insert('transactions', transaction.toMap());
+    return await db.transaction((txn) async {
+      if (transaction.type == TransactionType.expense) {
+        await _updateAccountBalanceWithTxn(txn, transaction.accountId, -transaction.amount);
+      } else if (transaction.type == TransactionType.income) {
+        await _updateAccountBalanceWithTxn(txn, transaction.accountId, transaction.amount);
+      } else if (transaction.type == TransactionType.transfer && transaction.targetAccountId != null) {
+        await _updateAccountBalanceWithTxn(txn, transaction.accountId, -transaction.amount);
+        await _updateAccountBalanceWithTxn(txn, transaction.targetAccountId!, transaction.amount);
+      }
+      
+      return await txn.insert('transactions', transaction.toMap());
+    });
   }
 
   Future<int> insertTransactionWithoutBalanceUpdate(models.Transaction transaction) async {
@@ -909,6 +954,79 @@ class DatabaseHelper {
     return result.map((map) => models.Transaction.fromMap(map)).toList();
   }
 
+  Future<List<models.Transaction>> searchTransactions({
+    String? categoryId,
+    DateTime? startDate,
+    DateTime? endDate,
+    String? keyword,
+  }) async {
+    final db = await instance.database;
+    
+    final List<String> conditions = [];
+    final List<dynamic> args = [];
+
+    if (categoryId != null && categoryId.isNotEmpty) {
+      // 检查是否是一级分类（一级分类没有parent_id）
+      final parentCategory = await db.query(
+        'categories',
+        where: 'id = ? AND parent_id IS NULL',
+        whereArgs: [categoryId],
+      );
+      
+      if (parentCategory.isNotEmpty) {
+        // 是一级分类，查询该分类及其所有二级分类的记录
+        final childCategories = await db.query(
+          'categories',
+          where: 'parent_id = ?',
+          whereArgs: [categoryId],
+        );
+        
+        final List<String> categoryIds = [categoryId];
+        for (var child in childCategories) {
+          categoryIds.add(child['id'] as String);
+        }
+        
+        // 使用IN查询
+        final placeholders = categoryIds.map((_) => '?').join(', ');
+        conditions.add('category_id IN ($placeholders)');
+        args.addAll(categoryIds);
+      } else {
+        // 是二级分类，直接查询
+        conditions.add('category_id = ?');
+        args.add(categoryId);
+      }
+    }
+
+    if (startDate != null) {
+      conditions.add('date >= ?');
+      args.add(startDate.toIso8601String());
+    }
+
+    if (endDate != null) {
+      conditions.add('date <= ?');
+      args.add(endDate.toIso8601String());
+    }
+
+    if (keyword != null && keyword.isNotEmpty) {
+      conditions.add('(remark LIKE ? OR merchant LIKE ?)');
+      args.add('%$keyword%');
+      args.add('%$keyword%');
+    }
+
+    String? where;
+    if (conditions.isNotEmpty) {
+      where = conditions.join(' AND ');
+    }
+
+    final result = await db.query(
+      'transactions',
+      where: where,
+      whereArgs: args.isNotEmpty ? args : null,
+      orderBy: 'date DESC, created_at DESC',
+    );
+    return result.map((map) => models.Transaction.fromMap(map)).toList();
+  }
+
   Future<models.Transaction?> getTransactionById(String id) async {
     final db = await instance.database;
     final result = await db.query(
@@ -925,54 +1043,55 @@ class DatabaseHelper {
   Future<int> updateTransaction(models.Transaction transaction) async {
     final db = await instance.database;
     
-    // 获取旧记录以更新账户余额
     final oldTransaction = await getTransactionById(transaction.id);
-    if (oldTransaction != null) {
-      // 回退旧余额
-      if (oldTransaction.type == TransactionType.expense) {
-        await updateAccountBalance(oldTransaction.accountId, oldTransaction.amount);
-      } else if (oldTransaction.type == TransactionType.income) {
-        await updateAccountBalance(oldTransaction.accountId, -oldTransaction.amount);
-      }
-
-      // 更新新余额
-      if (transaction.type == TransactionType.expense) {
-        await updateAccountBalance(transaction.accountId, -transaction.amount);
-      } else if (transaction.type == TransactionType.income) {
-        await updateAccountBalance(transaction.accountId, transaction.amount);
-      }
-    }
     
-    return await db.update(
-      'transactions',
-      transaction.copyWith(updatedAt: DateTime.now()).toMap(),
-      where: 'id = ?',
-      whereArgs: [transaction.id],
-    );
+    return await db.transaction((txn) async {
+      if (oldTransaction != null) {
+        if (oldTransaction.type == TransactionType.expense) {
+          await _updateAccountBalanceWithTxn(txn, oldTransaction.accountId, oldTransaction.amount);
+        } else if (oldTransaction.type == TransactionType.income) {
+          await _updateAccountBalanceWithTxn(txn, oldTransaction.accountId, -oldTransaction.amount);
+        }
+
+        if (transaction.type == TransactionType.expense) {
+          await _updateAccountBalanceWithTxn(txn, transaction.accountId, -transaction.amount);
+        } else if (transaction.type == TransactionType.income) {
+          await _updateAccountBalanceWithTxn(txn, transaction.accountId, transaction.amount);
+        }
+      }
+      
+      return await txn.update(
+        'transactions',
+        transaction.copyWith(updatedAt: DateTime.now()).toMap(),
+        where: 'id = ?',
+        whereArgs: [transaction.id],
+      );
+    });
   }
 
   Future<int> deleteTransaction(String id) async {
     final db = await instance.database;
     
-    // 获取交易记录以更新账户余额
     final transaction = await getTransactionById(id);
-    if (transaction != null) {
-      // 回退账户余额
-      if (transaction.type == TransactionType.expense) {
-        await updateAccountBalance(transaction.accountId, transaction.amount);
-      } else if (transaction.type == TransactionType.income) {
-        await updateAccountBalance(transaction.accountId, -transaction.amount);
-      } else if (transaction.type == TransactionType.transfer && transaction.targetAccountId != null) {
-        await updateAccountBalance(transaction.accountId, transaction.amount);
-        await updateAccountBalance(transaction.targetAccountId!, -transaction.amount);
-      }
-    }
     
-    return await db.delete(
-      'transactions',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await db.transaction((txn) async {
+      if (transaction != null) {
+        if (transaction.type == TransactionType.expense) {
+          await _updateAccountBalanceWithTxn(txn, transaction.accountId, transaction.amount);
+        } else if (transaction.type == TransactionType.income) {
+          await _updateAccountBalanceWithTxn(txn, transaction.accountId, -transaction.amount);
+        } else if (transaction.type == TransactionType.transfer && transaction.targetAccountId != null) {
+          await _updateAccountBalanceWithTxn(txn, transaction.accountId, transaction.amount);
+          await _updateAccountBalanceWithTxn(txn, transaction.targetAccountId!, -transaction.amount);
+        }
+      }
+      
+      return await txn.delete(
+        'transactions',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+    });
   }
 
   // ==================== 分类操作 ====================
@@ -1002,6 +1121,25 @@ class DatabaseHelper {
   Future<int> insertCategory(models.Category category) async {
     final db = await instance.database;
     return await db.insert('categories', category.toMap());
+  }
+
+  Future<int> updateCategory(models.Category category) async {
+    final db = await instance.database;
+    return await db.update(
+      'categories',
+      category.toMap(),
+      where: 'id = ?',
+      whereArgs: [category.id],
+    );
+  }
+
+  Future<int> deleteCategory(String id) async {
+    final db = await instance.database;
+    return await db.delete(
+      'categories',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 
   // ==================== 账户操作 ====================
@@ -1067,6 +1205,34 @@ class DatabaseHelper {
     ''', [newBalance, accountId]);
     
     return 1;
+  }
+
+  Future<int> _updateAccountBalanceWithTxn(Transaction txn, String accountId, double amount) async {
+    final accountResult = await txn.query(
+      'accounts',
+      where: 'id = ?',
+      whereArgs: [accountId],
+    );
+    
+    if (accountResult.isEmpty) {
+      return 0;
+    }
+    
+    final accountType = accountResult.first['type'] as String;
+    final isDebtAccount = accountType == 'credit' || accountType == 'receivable' || accountType == 'payable';
+    
+    double actualAmount = amount;
+    if (isDebtAccount) {
+      actualAmount = -amount;
+    }
+    
+    await txn.rawUpdate('''
+      UPDATE accounts 
+      SET balance = balance + ? 
+      WHERE id = ?
+    ''', [actualAmount, accountId]);
+    
+    return amount.toInt();
   }
 
   Future<double> calculateAccountBalance(String accountId) async {

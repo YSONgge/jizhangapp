@@ -120,6 +120,64 @@ class TransactionProvider with ChangeNotifier {
         .fold(0.0, (sum, t) => sum + t.amount);
   }
 
+  // 获取本季度支出
+  double getQuarterExpense() {
+    final now = DateTime.now();
+    final quarterStartMonth = ((now.month - 1) ~/ 3) * 3 + 1;
+    final startOfQuarter = DateTime(now.year, quarterStartMonth, 1);
+    final endOfQuarter = DateTime(now.year, quarterStartMonth + 3, 1);
+
+    return _transactions
+        .where((t) =>
+            t.type == TransactionType.expense &&
+            t.date.isAfter(startOfQuarter) &&
+            t.date.isBefore(endOfQuarter))
+        .fold(0.0, (sum, t) => sum + t.amount);
+  }
+
+  // 获取本季度收入
+  double getQuarterIncome() {
+    final now = DateTime.now();
+    final quarterStartMonth = ((now.month - 1) ~/ 3) * 3 + 1;
+    final startOfQuarter = DateTime(now.year, quarterStartMonth, 1);
+    final endOfQuarter = DateTime(now.year, quarterStartMonth + 3, 1);
+
+    return _transactions
+        .where((t) =>
+            t.type == TransactionType.income &&
+            t.date.isAfter(startOfQuarter) &&
+            t.date.isBefore(endOfQuarter))
+        .fold(0.0, (sum, t) => sum + t.amount);
+  }
+
+  // 获取本年度支出
+  double getYearExpense() {
+    final now = DateTime.now();
+    final startOfYear = DateTime(now.year, 1, 1);
+    final endOfYear = DateTime(now.year + 1, 1, 1);
+
+    return _transactions
+        .where((t) =>
+            t.type == TransactionType.expense &&
+            t.date.isAfter(startOfYear) &&
+            t.date.isBefore(endOfYear))
+        .fold(0.0, (sum, t) => sum + t.amount);
+  }
+
+  // 获取本年度收入
+  double getYearIncome() {
+    final now = DateTime.now();
+    final startOfYear = DateTime(now.year, 1, 1);
+    final endOfYear = DateTime(now.year + 1, 1, 1);
+
+    return _transactions
+        .where((t) =>
+            t.type == TransactionType.income &&
+            t.date.isAfter(startOfYear) &&
+            t.date.isBefore(endOfYear))
+        .fold(0.0, (sum, t) => sum + t.amount);
+  }
+
   // 按日期分组交易记录
   Map<String, List<models.Transaction>> getTransactionsByDate() {
     final Map<String, List<models.Transaction>> grouped = {};

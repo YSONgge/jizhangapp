@@ -40,7 +40,10 @@ class MerchantProvider with ChangeNotifier {
   }
 
   Future<void> deleteMerchant(String id) async {
-    final merchant = _merchants.firstWhere((m) => m['id'] == id);
+    final merchant = _merchants.firstWhere(
+      (m) => m['id'] == id,
+      orElse: () => throw Exception('商家不存在'),
+    );
     if (merchant['is_default'] == 1 && _merchants.length <= 1) {
       throw Exception('至少需要保留1个商家');
     }

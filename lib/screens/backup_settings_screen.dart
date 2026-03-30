@@ -294,7 +294,7 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
         padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 12.w),
         margin: EdgeInsets.only(bottom: 8.h),
         decoration: BoxDecoration(
-          color: isSelected ? Theme.of(context).primaryColor.withOpacity(0.1) : Colors.grey[50],
+          color: isSelected ? Theme.of(context).primaryColor.withValues(alpha: 0.1) : Colors.grey[50],
           borderRadius: BorderRadius.circular(8.r),
           border: Border.all(
             color: isSelected ? Theme.of(context).primaryColor : Colors.transparent,

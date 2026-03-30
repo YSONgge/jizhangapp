@@ -25,7 +25,7 @@ class AccountProvider with ChangeNotifier {
 
   double get netAssets => totalAssets - totalDebts;
 
-  AccountProvider() {}
+  AccountProvider();
 
   Future<void> loadAccounts() async {
     _isLoading = true;

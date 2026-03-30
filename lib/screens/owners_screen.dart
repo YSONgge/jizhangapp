@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:provider/provider.dart';
 import 'package:expense_tracker/database/database_helper.dart';
 
 class OwnersScreen extends StatefulWidget {

@@ -17,6 +17,7 @@ void main() async {
 
   OwnerProvider? ownerProvider;
   MerchantProvider? merchantProvider;
+  String? initError;
 
   try {
     await DatabaseHelper.instance.database;
@@ -32,10 +33,11 @@ void main() async {
     
     await _initTextParser(ownerProvider, merchantProvider);
   } catch (e) {
+    initError = e.toString();
     debugPrint('数据库初始化失败: $e');
   }
 
-  runApp(MyApp(ownerProvider: ownerProvider, merchantProvider: merchantProvider));
+  runApp(MyApp(ownerProvider: ownerProvider, merchantProvider: merchantProvider, initError: initError));
 }
 
 Future<void> _initTextParser(OwnerProvider ownerProvider, MerchantProvider merchantProvider) async {
@@ -54,16 +56,54 @@ Future<void> _initTextParser(OwnerProvider ownerProvider, MerchantProvider merch
 class MyApp extends StatelessWidget {
   final OwnerProvider? ownerProvider;
   final MerchantProvider? merchantProvider;
+  final String? initError;
 
-  const MyApp({super.key, this.ownerProvider, this.merchantProvider});
+  const MyApp({super.key, this.ownerProvider, this.merchantProvider, this.initError});
 
   @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(
-      designSize: const Size(375, 812), // iPhone X 设计尺寸
+      designSize: const Size(375, 812),
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
+        if (initError != null) {
+          return MaterialApp(
+            title: '智能记账',
+            debugShowCheckedModeBanner: false,
+            home: Scaffold(
+              body: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                      const SizedBox(height: 16),
+                      const Text(
+                        '应用初始化失败',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        initError!,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton(
+                        onPressed: () {
+                          throw Exception('请重启应用');
+                        },
+                        child: const Text('关闭应用'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
         return MultiProvider(
           providers: [
             ChangeNotifierProvider(

@@ -5,6 +5,7 @@ class Category {
   final String color;
   final int sortOrder;
   final String? parentId;
+  final bool isCustom;
 
   Category({
     required this.id,
@@ -13,6 +14,7 @@ class Category {
     required this.color,
     this.sortOrder = 0,
     this.parentId,
+    this.isCustom = false,
   });
 
   Map<String, dynamic> toMap() {
@@ -23,6 +25,7 @@ class Category {
       'color': color,
       'sort_order': sortOrder,
       'parent_id': parentId,
+      'is_custom': isCustom ? 1 : 0,
     };
   }
 
@@ -34,6 +37,7 @@ class Category {
       color: map['color'],
       sortOrder: map['sort_order'] ?? 0,
       parentId: map['parent_id'],
+      isCustom: map['is_custom'] == 1,
     );
   }
 
@@ -44,6 +48,7 @@ class Category {
     String? color,
     int? sortOrder,
     String? parentId,
+    bool? isCustom,
   }) {
     return Category(
       id: id ?? this.id,
@@ -52,6 +57,7 @@ class Category {
       color: color ?? this.color,
       sortOrder: sortOrder ?? this.sortOrder,
       parentId: parentId ?? this.parentId,
+      isCustom: isCustom ?? this.isCustom,
     );
   }
 }

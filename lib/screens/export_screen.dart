@@ -123,7 +123,7 @@ class _ExportScreenState extends State<ExportScreen> {
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, -2),
                 ),
@@ -170,7 +170,7 @@ class _ExportScreenState extends State<ExportScreen> {
         padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 12.w),
         margin: EdgeInsets.only(bottom: 8.h),
         decoration: BoxDecoration(
-          color: isSelected ? Theme.of(context).primaryColor.withOpacity(0.1) : Colors.grey[50],
+          color: isSelected ? Theme.of(context).primaryColor.withValues(alpha: 0.1) : Colors.grey[50],
           borderRadius: BorderRadius.circular(8.r),
           border: Border.all(
             color: isSelected ? Theme.of(context).primaryColor : Colors.transparent,

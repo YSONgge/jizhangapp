@@ -5,6 +5,7 @@ import 'package:expense_tracker/data/models/transaction_type.dart';
 import 'package:provider/provider.dart';
 import 'package:expense_tracker/providers/category_provider.dart';
 import 'package:expense_tracker/providers/account_provider.dart';
+import 'package:intl/intl.dart';
 
 class TransactionListItem extends StatelessWidget {
   final models.Transaction transaction;
@@ -31,7 +32,7 @@ class TransactionListItem extends StatelessWidget {
           borderRadius: BorderRadius.circular(12.r),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -65,6 +66,14 @@ class TransactionListItem extends StatelessWidget {
                           ),
                         ),
                       ],
+                      SizedBox(width: 4.w),
+                      Text(
+                        DateFormat('MM-dd HH:mm').format(transaction.date),
+                        style: TextStyle(
+                          fontSize: 10.sp,
+                          color: Colors.grey[400],
+                        ),
+                      ),
                     ],
                   ),
                   SizedBox(height: 4.h),

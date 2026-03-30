@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
-import '../models/voice_input_model.dart';
 import '../providers/category_provider.dart';
 import '../providers/account_provider.dart';
 import '../providers/transaction_provider.dart';
@@ -17,7 +16,6 @@ import '../data/models/account.dart' as models;
 import '../services/text_parser.dart';
 import '../database/database_helper.dart';
 import '../widgets/account_picker_sheet.dart';
-import 'voice_input_screen.dart';
 import 'package:uuid/uuid.dart';
 
 /// 全屏记账编辑页面 - 重新设计
@@ -28,24 +26,11 @@ import 'package:uuid/uuid.dart';
 /// - 高留白、呼吸感动画
 /// - "文字即刻变账单"的智能感
 class FullScreenEditorScreen extends StatefulWidget {
-  /// 语音识别结果(从半屏确认进入时提供)
-  final VoiceRecognitionResult? voiceResult;
-  /// 解析后的数据(从半屏确认进入时提供)
-  final Map<String, dynamic>? parsedData;
-  /// 进入方式: 'direct'(短按+) 或 'voice'(语音录入)
-  final String entryMode;
-  /// 从语音确认进入时的Hero标签
-  final String? heroTag;
-  
   /// 要编辑的交易记录
   final models.Transaction? transactionToEdit;
 
   const FullScreenEditorScreen({
     super.key,
-    this.voiceResult,
-    this.parsedData,
-    this.entryMode = 'direct',
-    this.heroTag,
     this.transactionToEdit,
   });
 
@@ -59,6 +44,16 @@ class _FullScreenEditorScreenState extends State<FullScreenEditorScreen>
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _semanticInputController = TextEditingController();
   final TextEditingController _remarkController = TextEditingController();
+  
+  // FocusNode for keyboard control
+  final FocusNode _amountFocusNode = FocusNode();
+  final FocusNode _semanticInputFocusNode = FocusNode();
+  final FocusNode _remarkFocusNode = FocusNode();
+  
+  // Track if user has actively focused on input fields
+  bool _hasUserFocusedAmount = false;
+  bool _hasUserFocusedSemantic = false;
+  bool _hasUserFocusedRemark = false;
   TransactionType _selectedType = TransactionType.expense;
   models.Category? _selectedCategory;
   models.Account? _selectedAccount;
@@ -157,19 +152,6 @@ class _FullScreenEditorScreenState extends State<FullScreenEditorScreen>
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _loadEditData(t);
       });
-    } else if (widget.entryMode == 'voice' && widget.parsedData != null) {
-      // 从语音确认进入，预填充数据
-      final data = widget.parsedData!;
-      final amount = data['amount'] as double?;
-      if (amount != null) {
-        _amountController.text = amount.toStringAsFixed(2);
-      }
-      _selectedCategory = _getCategoryByName(data['category'] as String?);
-      _selectedAccount = _getAccountByName(data['account'] as String?);
-      _selectedOwner = data['owner'] as String? ?? '本人';
-      _merchant = data['merchant'] as String?;
-      _semanticInputController.text = widget.voiceResult?.cleanedText ?? '';
-      _remarkController.text = widget.voiceResult?.cleanedText ?? '';
     } else {
       // 直接进入，使用默认值
       _semanticInputController.text = '';
@@ -323,6 +305,9 @@ class _FullScreenEditorScreenState extends State<FullScreenEditorScreen>
     _amountController.dispose();
     _semanticInputController.dispose();
     _remarkController.dispose();
+    _amountFocusNode.dispose();
+    _semanticInputFocusNode.dispose();
+    _remarkFocusNode.dispose();
     _amountControllerAnim.dispose();
     _semanticInputControllerAnim.dispose();
     _propertyCardControllerAnim.dispose();
@@ -651,7 +636,7 @@ class _FullScreenEditorScreenState extends State<FullScreenEditorScreen>
           SizedBox(height: 12.h),
           // 使用 Hero 包裹金额区域，实现从半屏到全屏的平滑过渡
           Hero(
-            tag: widget.heroTag ?? 'amount_hero',
+            tag: 'amount_hero',
             child: Material(
               color: Colors.transparent,
               child: Row(
@@ -1222,10 +1207,10 @@ class _FullScreenEditorScreenState extends State<FullScreenEditorScreen>
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
               decoration: BoxDecoration(
-                color: const Color(0xFF34C759).withOpacity(0.1),
+                color: const Color(0xFF34C759).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8.r),
                 border: Border.all(
-                  color: const Color(0xFF34C759).withOpacity(0.3),
+                  color: const Color(0xFF34C759).withValues(alpha: 0.3),
                 ),
               ),
               child: Text(
@@ -1306,10 +1291,10 @@ class _FullScreenEditorScreenState extends State<FullScreenEditorScreen>
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
               decoration: BoxDecoration(
-                color: const Color(0xFF5856D6).withOpacity(0.1),
+                color: const Color(0xFF5856D6).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8.r),
                 border: Border.all(
-                  color: const Color(0xFF5856D6).withOpacity(0.3),
+                  color: const Color(0xFF5856D6).withValues(alpha: 0.3),
                 ),
               ),
               child: Text(
@@ -1394,7 +1379,7 @@ class _FullScreenEditorScreenState extends State<FullScreenEditorScreen>
                     child: Text(
                       value,
                       style: TextStyle(
-                        fontSize: 16.sp,
+                        fontSize: 14.sp,
                         color: const Color(0xFF1A1A1A),
                         fontWeight: FontWeight.w600,
                       ),

@@ -6,6 +6,8 @@ import 'package:expense_tracker/data/models/account.dart';
 import 'package:expense_tracker/data/models/transaction.dart' as models;
 import 'package:expense_tracker/data/models/transaction_type.dart';
 import 'package:expense_tracker/database/database_helper.dart';
+import 'package:expense_tracker/screens/full_screen_editor_screen.dart';
+import 'package:expense_tracker/providers/transaction_provider.dart';
 import 'package:intl/intl.dart';
 
 class AccountsScreen extends StatefulWidget {
@@ -87,7 +89,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
                             '净资产',
                             style: TextStyle(
                               fontSize: 14.sp,
-                              color: Colors.white.withOpacity(0.8),
+                              color: Colors.white.withValues(alpha: 0.8),
                             ),
                           ),
                           SizedBox(height: 8.h),
@@ -111,7 +113,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
                         borderRadius: BorderRadius.circular(12.r),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: Colors.black.withValues(alpha: 0.05),
                             blurRadius: 10,
                             offset: const Offset(0, 2),
                           ),
@@ -490,7 +492,7 @@ class _AccountDetailScreenState extends State<_AccountDetailScreen> {
                     children: [
                       Text(
                         '账户余额',
-                        style: TextStyle(fontSize: 14.sp, color: Colors.white.withOpacity(0.8)),
+                        style: TextStyle(fontSize: 14.sp, color: Colors.white.withValues(alpha: 0.8)),
                       ),
                       SizedBox(height: 8.h),
                       Text(
@@ -584,38 +586,52 @@ class _AccountDetailScreenState extends State<_AccountDetailScreen> {
                               itemCount: _transactions.length,
                               itemBuilder: (context, index) {
                                 final t = _transactions[index];
-                                return Container(
-                                  margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
-                                  padding: EdgeInsets.all(12.w),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(8.r),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(t.remark.isNotEmpty ? t.remark : (t.type == TransactionType.transfer ? _getTransferLabel(t, _account.id, context.read<AccountProvider>()) : t.categoryId ?? '支出'),
-                                                style: TextStyle(fontSize: 14.sp, color: Colors.black87)),
-                                            SizedBox(height: 4.h),
-                                            Text(
-                                              DateFormat('yyyy-MM-dd HH:mm').format(t.date),
-                                              style: TextStyle(fontSize: 12.sp, color: Colors.grey[400]),
-                                            ),
-                                          ],
-                                        ),
+                                return GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => FullScreenEditorScreen(transactionToEdit: t),
                                       ),
-                                      Text(
-                                        _getAmountText(t, _account.id),
-                                        style: TextStyle(
-                                          fontSize: 16.sp,
-                                          fontWeight: FontWeight.w500,
-                                          color: _getAmountColor(t, _account.id),
+                                    ).then((_) {
+                                      context.read<TransactionProvider>().loadTransactions();
+                                      context.read<AccountProvider>().loadAccounts();
+                                      _loadData();
+                                    });
+                                  },
+                                  child: Container(
+                                    margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+                                    padding: EdgeInsets.all(12.w),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(8.r),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(t.remark.isNotEmpty ? t.remark : (t.type == TransactionType.transfer ? _getTransferLabel(t, _account.id, context.read<AccountProvider>()) : t.categoryId ?? '支出'),
+                                                  style: TextStyle(fontSize: 14.sp, color: Colors.black87)),
+                                              SizedBox(height: 4.h),
+                                              Text(
+                                                DateFormat('yyyy-MM-dd HH:mm').format(t.date),
+                                                style: TextStyle(fontSize: 12.sp, color: Colors.grey[400]),
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                        Text(
+                                          _getAmountText(t, _account.id),
+                                          style: TextStyle(
+                                            fontSize: 16.sp,
+                                            fontWeight: FontWeight.w500,
+                                            color: _getAmountColor(t, _account.id),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 );
                               },

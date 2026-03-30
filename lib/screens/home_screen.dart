@@ -6,12 +6,11 @@ import 'package:expense_tracker/providers/account_provider.dart';
 import 'package:expense_tracker/providers/category_provider.dart';
 import 'package:expense_tracker/widgets/transaction_list_item.dart';
 import 'package:expense_tracker/screens/full_screen_editor_screen.dart';
-import 'package:expense_tracker/screens/voice_input_screen.dart';
-import 'package:expense_tracker/screens/accounts_screen.dart';
 import 'package:expense_tracker/screens/statistics_screen.dart';
+import 'package:expense_tracker/screens/accounts_screen.dart';
+import 'package:expense_tracker/screens/search_transactions_screen.dart';
 import 'package:expense_tracker/screens/settings_screen.dart';
 import 'package:expense_tracker/database/database_helper.dart';
-import 'package:expense_tracker/data/models/transaction_type.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -96,22 +95,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _onMainButtonLongPress() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => VoiceInputScreen(
-        onComplete: () {
-          Navigator.pop(context);
-        },
-        onCancelled: () {
-          Navigator.pop(context);
-        },
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -127,13 +110,26 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           if (_currentIndex == 0)
             Padding(
+              padding: EdgeInsets.only(right: 8.w),
+              child: IconButton(
+                icon: const Icon(Icons.search, color: Colors.white),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const SearchTransactionsScreen()),
+                  );
+                },
+              ),
+            ),
+          if (_currentIndex == 0)
+            Padding(
               padding: EdgeInsets.only(right: 16.w),
               child: Center(
                 child: Consumer<TransactionProvider>(
                   builder: (context, provider, child) {
                     return Text(
                       '本月',
-                      style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14.sp),
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 14.sp),
                     );
                   },
                 ),
@@ -197,7 +193,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.blue.withOpacity(0.3),
+                            color: Colors.blue.withValues(alpha: 0.3),
                             blurRadius: 12,
                             offset: const Offset(0, 6),
                           ),
@@ -351,13 +347,59 @@ class _TransactionsTab extends StatelessWidget {
   }
 }
 
-class _SummaryCard extends StatelessWidget {
+enum BalancePeriod { month, quarter, year }
+
+class _SummaryCard extends StatefulWidget {
+  const _SummaryCard();
+
+  @override
+  State<_SummaryCard> createState() => _SummaryCardState();
+}
+
+class _SummaryCardState extends State<_SummaryCard> {
+  bool _isAmountHidden = false;
+  BalancePeriod _selectedPeriod = BalancePeriod.month;
+
+  String _formatAmount(double amount) {
+    if (_isAmountHidden) {
+      return '******';
+    }
+    return '¥${amount.toStringAsFixed(2)}';
+  }
+
+  String _getPeriodLabel(BalancePeriod period) {
+    switch (period) {
+      case BalancePeriod.month:
+        return '本月结余';
+      case BalancePeriod.quarter:
+        return '本季度结余';
+      case BalancePeriod.year:
+        return '本年度结余';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<TransactionProvider>(
       builder: (context, provider, child) {
-        final expense = provider.getMonthExpense();
-        final income = provider.getMonthIncome();
+        double expense;
+        double income;
+        
+        switch (_selectedPeriod) {
+          case BalancePeriod.month:
+            expense = provider.getMonthExpense();
+            income = provider.getMonthIncome();
+            break;
+          case BalancePeriod.quarter:
+            expense = provider.getQuarterExpense();
+            income = provider.getQuarterIncome();
+            break;
+          case BalancePeriod.year:
+            expense = provider.getYearExpense();
+            income = provider.getYearIncome();
+            break;
+        }
+        
         final balance = income - expense;
 
         return Container(
@@ -370,23 +412,40 @@ class _SummaryCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                '本月结余',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: Colors.white.withOpacity(0.8),
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    _getPeriodLabel(_selectedPeriod),
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      color: Colors.white.withValues(alpha: 0.8),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _isAmountHidden = !_isAmountHidden;
+                      });
+                    },
+                    child: Icon(
+                      _isAmountHidden ? Icons.visibility_off : Icons.visibility,
+                      color: Colors.white.withValues(alpha: 0.8),
+                      size: 20.w,
+                    ),
+                  ),
+                ],
               ),
               SizedBox(height: 8.h),
               Text(
-                '¥${balance.toStringAsFixed(2)}',
+                _formatAmount(balance),
                 style: TextStyle(
                   fontSize: 32.sp,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
               ),
-              SizedBox(height: 20.h),
+              SizedBox(height: 16.h),
               Row(
                 children: [
                   Expanded(
@@ -394,26 +453,89 @@ class _SummaryCard extends StatelessWidget {
                       label: '支出',
                       amount: expense,
                       color: Colors.white,
+                      isHidden: _isAmountHidden,
                     ),
                   ),
                   Container(
                     width: 1,
                     height: 40.h,
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                   ),
                   Expanded(
                     child: _AmountItem(
                       label: '收入',
                       amount: income,
                       color: Colors.white,
+                      isHidden: _isAmountHidden,
                     ),
                   ),
                 ],
               ),
+              SizedBox(height: 16.h),
+              _buildPeriodSelector(),
             ],
           ),
         );
       },
+    );
+  }
+
+  Widget _buildPeriodSelector() {
+    return Container(
+      height: 36.h,
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(18.r),
+      ),
+      child: Row(
+        children: [
+          _buildPeriodButton('本月', BalancePeriod.month),
+          _buildPeriodButton('本季度', BalancePeriod.quarter),
+          _buildPeriodButton('本年度', BalancePeriod.year),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPeriodButton(String label, BalancePeriod period) {
+    final isSelected = _selectedPeriod == period;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _selectedPeriod = period;
+          });
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            color: isSelected ? Colors.white : Colors.transparent,
+            borderRadius: BorderRadius.circular(18.r),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (isSelected)
+                Container(
+                  width: 6.w,
+                  height: 6.w,
+                  margin: EdgeInsets.only(right: 4.w),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2196F3),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13.sp,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                  color: isSelected ? const Color(0xFF2196F3) : Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -422,12 +544,21 @@ class _AmountItem extends StatelessWidget {
   final String label;
   final double amount;
   final Color color;
+  final bool isHidden;
 
   const _AmountItem({
     required this.label,
     required this.amount,
     required this.color,
+    this.isHidden = false,
   });
+
+  String _formatAmount(double amount) {
+    if (isHidden) {
+      return '***';
+    }
+    return '¥${amount.toStringAsFixed(2)}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -437,12 +568,12 @@ class _AmountItem extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 12.sp,
-            color: color.withOpacity(0.7),
+            color: color.withValues(alpha: 0.7),
           ),
         ),
         SizedBox(height: 4.h),
         Text(
-          '¥${amount.toStringAsFixed(2)}',
+          _formatAmount(amount),
           style: TextStyle(
             fontSize: 16.sp,
             fontWeight: FontWeight.w600,
