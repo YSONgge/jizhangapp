@@ -3,7 +3,11 @@ import 'package:expense_tracker/data/models/category.dart' as models;
 import 'package:expense_tracker/database/database_helper.dart';
 
 class CategoryProvider with ChangeNotifier {
+  static const String expensePrefix = 'cat_';
+  static const String incomePrefix = 'cat_inc_';
+
   List<models.Category> _categories = [];
+  Map<String, models.Category> _categoryIndex = {};
   bool _isLoading = false;
   String? _error;
   List<String> _customCategoryKeywords = [];
@@ -13,17 +17,17 @@ class CategoryProvider with ChangeNotifier {
   String? get error => _error;
   List<String> get customCategoryKeywords => _customCategoryKeywords;
 
+  void _rebuildIndex() {
+    _categoryIndex = {for (var cat in _categories) cat.id: cat};
+  }
+
   // 根据类型筛选分类（支出/收入）
   List<models.Category> getExpenseCategories() {
-    return _categories.where((cat) => cat.id.startsWith('cat_') && !cat.id.startsWith('cat_inc_')).toList();
+    return _categories.where((cat) => cat.id.startsWith(expensePrefix) && !cat.id.startsWith(incomePrefix)).toList();
   }
 
   List<models.Category> getIncomeCategories() {
-    return _categories.where((cat) => cat.id.startsWith('cat_inc_')).toList();
-  }
-
-  CategoryProvider() {
-    // 不在构造函数中加载数据，避免阻塞
+    return _categories.where((cat) => cat.id.startsWith(incomePrefix)).toList();
   }
 
   Future<void> loadCategories() async {
@@ -33,6 +37,7 @@ class CategoryProvider with ChangeNotifier {
 
     try {
       _categories = await DatabaseHelper.instance.getAllCategories();
+      _rebuildIndex();
       _isLoading = false;
       notifyListeners();
     } catch (e) {
@@ -43,11 +48,7 @@ class CategoryProvider with ChangeNotifier {
   }
 
   models.Category? getCategoryById(String id) {
-    try {
-      return _categories.firstWhere((cat) => cat.id == id);
-    } catch (e) {
-      return null;
-    }
+    return _categoryIndex[id];
   }
 
   // 根据名称查找分类
@@ -61,14 +62,12 @@ class CategoryProvider with ChangeNotifier {
 
   // 获取父分类列表（支出）
   List<models.Category> getExpenseParentCategories() {
-    final expenseCats = _categories.where((cat) => cat.id.startsWith('cat_') && !cat.id.startsWith('cat_inc_')).toList();
-    return expenseCats.where((cat) => cat.parentId == null).toList();
+    return getExpenseCategories().where((cat) => cat.parentId == null).toList();
   }
 
   // 获取父分类列表（收入）
   List<models.Category> getIncomeParentCategories() {
-    final incomeCats = _categories.where((cat) => cat.id.startsWith('cat_inc_')).toList();
-    return incomeCats.where((cat) => cat.parentId == null).toList();
+    return getIncomeCategories().where((cat) => cat.parentId == null).toList();
   }
 
   // 获取子分类列表

@@ -228,209 +228,202 @@ class _CategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Color(int.parse(category.color.replaceAll('#', '0xFF'))).withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(
-          color: Color(int.parse(category.color.replaceAll('#', '0xFF'))).withValues(alpha: 0.3),
+    final color = Color(int.parse(category.color.replaceAll('#', '0xFF')));
+    return GestureDetector(
+      onLongPress: category.isCustom ? () => _showCategoryOptions(context) : null,
+      child: Container(
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.25),
+          borderRadius: BorderRadius.circular(16.r),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              _getIconData(category.icon),
+              size: 32.sp,
+              color: Colors.grey[600],
+            ),
+            SizedBox(height: 6.h),
+            Text(
+              category.name,
+              style: TextStyle(
+                fontSize: 12.sp,
+                color: Colors.grey[700],
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ),
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            _getIconData(category.icon),
-            size: 32.sp,
-            color: Color(int.parse(category.color.replaceAll('#', '0xFF'))),
-          ),
-          SizedBox(height: 4.h),
-          Text(
-            category.name,
-            style: TextStyle(
-              fontSize: 12.sp,
-              color: Colors.grey[700],
+    );
+  }
+
+  void _showCategoryOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => Container(
+        padding: EdgeInsets.symmetric(vertical: 16.h),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40.w,
+              height: 4.h,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+            SizedBox(height: 16.h),
+            Text(
+              category.name,
+              style: TextStyle(
+                fontSize: 16.sp,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            SizedBox(height: 16.h),
+            ListTile(
+              leading: Container(
+                width: 40.w,
+                height: 40.w,
+                decoration: BoxDecoration(
+                  color: Colors.blue.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10.r),
+                ),
+                child: Icon(Icons.edit, color: Colors.blue),
+              ),
+              title: Text('编辑分类', style: TextStyle(fontSize: 14.sp)),
+              onTap: () {
+                Navigator.pop(context);
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => AddCustomCategorySheet(category: category),
+                );
+              },
+            ),
+            SizedBox(height: 8.h),
+          ],
+        ),
       ),
     );
   }
 
   IconData _getIconData(String iconName) {
     switch (iconName) {
-      case 'restaurant':
-        return Icons.restaurant;
-      case 'directions_car':
-        return Icons.directions_car;
-      case 'shopping_cart':
-        return Icons.shopping_cart;
-      case 'home':
-        return Icons.home;
-      case 'sports_esports':
-        return Icons.sports_esports;
-      case 'medical_services':
-        return Icons.medical_services;
-      case 'school':
-        return Icons.school;
-      case 'inventory_2':
-        return Icons.inventory_2;
-      case 'payments':
-        return Icons.payments;
-      case 'work':
-        return Icons.work;
-      case 'trending_up':
-        return Icons.trending_up;
-      case 'card_giftcard':
-        return Icons.card_giftcard;
-      case 'attach_money':
-        return Icons.attach_money;
+      case 'restaurant': return Icons.restaurant_outlined;
+      case 'home': return Icons.home_outlined;
       case 'phone':
-        return Icons.phone;
-      case 'wifi':
-        return Icons.wifi;
-      case 'tv':
-        return Icons.tv;
-      case 'casino':
-        return Icons.casino;
-      case 'theater_comedy':
-        return Icons.theater_comedy;
-      case 'mic':
-        return Icons.mic;
-      case 'movie':
-        return Icons.movie;
-      case 'music_note':
-        return Icons.music_note;
-      case 'celebration':
-        return Icons.celebration;
-      case 'event':
-        return Icons.event;
-      case 'child_care':
-        return Icons.child_care;
-      case 'cake':
-        return Icons.cake;
-      case 'favorite':
-        return Icons.favorite;
-      case 'elderly':
-        return Icons.elderly;
-      case 'pregnant_woman':
-        return Icons.pregnant_woman;
-      case 'flight':
-        return Icons.flight;
-      case 'hotel':
-        return Icons.hotel;
-      case 'luggage':
-        return Icons.luggage;
-      case 'subway':
-        return Icons.subway;
-      case 'directions_bus':
-        return Icons.directions_bus;
-      case 'build':
-        return Icons.build;
-      case 'local_police':
-        return Icons.local_police;
-      case 'local_parking':
-        return Icons.local_parking;
-      case 'badge':
-        return Icons.badge;
-      case 'pedal_bike':
-        return Icons.pedal_bike;
-      case 'local_gas_station':
-        return Icons.local_gas_station;
-      case 'train':
-        return Icons.train;
-      case 'local_taxi':
-        return Icons.local_taxi;
-      case 'devices':
-        return Icons.devices;
-      case 'face':
-        return Icons.face;
-      case 'soap':
-        return Icons.soap;
-      case 'checkroom':
-        return Icons.checkroom;
-      case 'local_mall':
-        return Icons.local_mall;
-      case 'menu_book':
-        return Icons.menu_book;
-      case 'kitchen':
-        return Icons.kitchen;
-      case 'diamond':
-        return Icons.diamond;
-      case 'pets':
-        return Icons.pets;
-      case 'chair':
-        return Icons.chair;
-      case 'bed':
-        return Icons.bed;
-      case 'money_off':
-        return Icons.money_off;
-      case 'report_problem':
-        return Icons.report_problem;
-      case 'more_horiz':
-        return Icons.more_horiz;
-      case 'account_balance':
-        return Icons.account_balance;
-      case 'schedule':
-        return Icons.schedule;
-      case 'store':
-        return Icons.store;
-      case 'support_agent':
-        return Icons.support_agent;
-      case 'chat':
-        return Icons.chat;
-      case 'percent':
-        return Icons.percent;
-      case 'show_chart':
-        return Icons.show_chart;
-      case 'candlestick_chart':
-        return Icons.candlestick_chart;
-      case 'account_balance_wallet':
-        return Icons.account_balance_wallet;
-      case 'monetization_on':
-        return Icons.monetization_on;
-      case 'edit_note':
-        return Icons.edit_note;
-      case 'receipt_long':
-        return Icons.receipt_long;
-      case 'gavel':
-        return Icons.gavel;
-      case 'redeem':
-        return Icons.redeem;
-      case 'auto_awesome':
-        return Icons.auto_awesome;
-      case 'smartphone':
-        return Icons.smartphone;
-      case 'payment':
-        return Icons.payment;
-      case 'shopping_bag':
-        return Icons.shopping_bag;
-      case 'shopping':
-        return Icons.shopping_cart;
-      case 'directions':
-        return Icons.directions;
-      case 'local_shipping':
-        return Icons.local_shipping;
-      case 'description':
-        return Icons.description;
-      case 'health_and_safety':
-        return Icons.health_and_safety;
-      case 'medication':
-        return Icons.medication;
-      case 'local_hospital':
-        return Icons.local_hospital;
-      case 'security':
-        return Icons.security;
-      default:
-        return Icons.category;
+      case 'phone_android': return Icons.phone_android_outlined;
+      case 'shopping_cart': return Icons.shopping_cart_outlined;
+      case 'directions_car': return Icons.directions_car_outlined;
+      case 'flight': return Icons.flight_outlined;
+      case 'medical':
+      case 'medical_services': return Icons.medical_services_outlined;
+      case 'school': return Icons.school_outlined;
+      case 'sports':
+      case 'sports_esports': return Icons.sports_esports_outlined;
+      case 'gift':
+      case 'card_giftcard': return Icons.card_giftcard_outlined;
+      case 'child':
+      case 'child_care': return Icons.child_care_outlined;
+      case 'finance':
+      case 'account_balance': return Icons.account_balance_outlined;
+      case 'salary':
+      case 'payments': return Icons.payments_outlined;
+      case 'money':
+      case 'attach_money': return Icons.attach_money_outlined;
+      case 'savings': return Icons.savings_outlined;
+      case 'laptop': return Icons.laptop_mac_outlined;
+      case 'coffee': return Icons.coffee_outlined;
+      case 'fitness':
+      case 'fitness_center': return Icons.fitness_center_outlined;
+      case 'pets': return Icons.pets_outlined;
+      case 'movie': return Icons.movie_outlined;
+      case 'music':
+      case 'music_note': return Icons.music_note_outlined;
+      case 'cake': return Icons.cake_outlined;
+      case 'hospital':
+      case 'local_hospital': return Icons.local_hospital_outlined;
+      case 'more':
+      case 'more_horiz': return Icons.more_horiz_outlined;
+      case 'store': return Icons.store_outlined;
+      case 'work': return Icons.work_outlined;
+      case 'trending_up': return Icons.trending_up_outlined;
+      case 'receipt_long': return Icons.receipt_long_outlined;
+      case 'tv': return Icons.tv_outlined;
+      case 'wifi': return Icons.wifi_outlined;
+      case 'casino': return Icons.casino_outlined;
+      case 'theater_comedy': return Icons.theater_comedy_outlined;
+      case 'mic': return Icons.mic_outlined;
+      case 'celebration': return Icons.celebration_outlined;
+      case 'event': return Icons.event_outlined;
+      case 'favorite': return Icons.favorite_outlined;
+      case 'elderly': return Icons.elderly_outlined;
+      case 'pregnant_woman': return Icons.pregnant_woman_outlined;
+      case 'hotel': return Icons.hotel_outlined;
+      case 'luggage': return Icons.luggage_outlined;
+      case 'subway': return Icons.subway_outlined;
+      case 'directions_bus': return Icons.directions_bus_outlined;
+      case 'local_police': return Icons.local_police_outlined;
+      case 'local_parking': return Icons.local_parking_outlined;
+      case 'build': return Icons.build_outlined;
+      case 'badge': return Icons.badge_outlined;
+      case 'pedal_bike': return Icons.pedal_bike_outlined;
+      case 'local_gas_station': return Icons.local_gas_station_outlined;
+      case 'train': return Icons.train_outlined;
+      case 'local_taxi': return Icons.local_taxi_outlined;
+      case 'devices': return Icons.devices_outlined;
+      case 'face': return Icons.face_outlined;
+      case 'soap': return Icons.soap_outlined;
+      case 'checkroom': return Icons.checkroom_outlined;
+      case 'local_mall': return Icons.local_mall_outlined;
+      case 'menu_book': return Icons.menu_book_outlined;
+      case 'kitchen': return Icons.kitchen_outlined;
+      case 'diamond': return Icons.diamond_outlined;
+      case 'chair': return Icons.chair_outlined;
+      case 'cleaning_services': return Icons.cleaning_services_outlined;
+      case 'shopping_bag': return Icons.shopping_bag_outlined;
+      case 'local_shipping': return Icons.local_shipping_outlined;
+      case 'refund': return Icons.currency_exchange_outlined;
+      case 'bed': return Icons.bed_outlined;
+      case 'medication': return Icons.medication_outlined;
+      case 'health_and_safety': return Icons.health_and_safety_outlined;
+      case 'money_off': return Icons.money_off_outlined;
+      case 'report_problem': return Icons.report_problem_outlined;
+      case 'trending_down': return Icons.trending_down_outlined;
+      case 'security': return Icons.security_outlined;
+      case 'percent': return Icons.percent_outlined;
+      case 'description': return Icons.description_outlined;
+      case 'receipt': return Icons.receipt_outlined;
+      case 'gavel': return Icons.gavel_outlined;
+      case 'account_balance_wallet': return Icons.account_balance_wallet_outlined;
+      case 'schedule': return Icons.schedule_outlined;
+      case 'support_agent': return Icons.support_agent_outlined;
+      case 'chat': return Icons.chat_outlined;
+      case 'show_chart': return Icons.show_chart_outlined;
+      case 'candlestick_chart': return Icons.candlestick_chart_outlined;
+      case 'monetization_on': return Icons.monetization_on_outlined;
+      case 'smartphone': return Icons.smartphone_outlined;
+      case 'edit_note': return Icons.edit_note_outlined;
+      case 'redeem': return Icons.redeem_outlined;
+      case 'auto_awesome': return Icons.auto_awesome_outlined;
+      default: return Icons.category_outlined;
     }
   }
 }
 
 class AddCustomCategorySheet extends StatefulWidget {
-  const AddCustomCategorySheet({super.key});
+  final Category? category;
+
+  const AddCustomCategorySheet({super.key, this.category});
 
   @override
   State<AddCustomCategorySheet> createState() => _AddCustomCategorySheetState();
@@ -443,103 +436,184 @@ class _AddCustomCategorySheetState extends State<AddCustomCategorySheet> {
   String _selectedIcon = 'category';
   Color _selectedColor = const Color(0xFF4ECDC4);
 
+  bool get isEditing => widget.category != null;
+
   final List<Map<String, dynamic>> _parentCategories = [
     {'id': 'cat_food', 'name': '食品酒水', 'icon': 'restaurant'},
     {'id': 'cat_home', 'name': '居家生活', 'icon': 'home'},
     {'id': 'cat_comm', 'name': '交流通讯', 'icon': 'phone'},
-    {'id': 'cat_ent', 'name': '休闲娱乐', 'icon': 'sports_esports'},
-    {'id': 'cat_social', 'name': '人情费用', 'icon': 'card_giftcard'},
-    {'id': 'cat_baby', 'name': '宝宝费用', 'icon': 'child_care'},
+    {'id': 'cat_ent', 'name': '休闲娱乐', 'icon': 'sports'},
+    {'id': 'cat_social', 'name': '人情费用', 'icon': 'gift'},
+    {'id': 'cat_baby', 'name': '宝宝费用', 'icon': 'child'},
     {'id': 'cat_travel', 'name': '出差旅游', 'icon': 'flight'},
     {'id': 'cat_traffic', 'name': '行车交通', 'icon': 'directions_car'},
     {'id': 'cat_shop', 'name': '购物消费', 'icon': 'shopping_cart'},
-    {'id': 'cat_medical', 'name': '医疗教育', 'icon': 'medical_services'},
-    {'id': 'cat_other', 'name': '其他杂项', 'icon': 'more_horiz'},
-    {'id': 'cat_finance', 'name': '金融保险', 'icon': 'account_balance'},
-    {'id': 'cat_inc_wage', 'name': '工资收入', 'icon': 'payments'},
-    {'id': 'cat_inc_bus', 'name': '经营收入', 'icon': 'store'},
-    {'id': 'cat_inc_pt', 'name': '兼职副业', 'icon': 'work'},
-    {'id': 'cat_inc_refund', 'name': '退款返还', 'icon': 'receipt_long'},
-    {'id': 'cat_inc_other', 'name': '其他收入', 'icon': 'attach_money'},
+    {'id': 'cat_medical', 'name': '医疗教育', 'icon': 'medical'},
+    {'id': 'cat_other', 'name': '其他杂项', 'icon': 'more'},
+    {'id': 'cat_finance', 'name': '金融保险', 'icon': 'finance'},
+    {'id': 'cat_inc_wage', 'name': '工资收入', 'icon': 'salary'},
+    {'id': 'cat_inc_bus', 'name': '经营收入', 'icon': 'savings'},
+    {'id': 'cat_inc_pt', 'name': '兼职副业', 'icon': 'laptop'},
+    {'id': 'cat_inc_refund', 'name': '退款返还', 'icon': 'money'},
+    {'id': 'cat_inc_other', 'name': '其他收入', 'icon': 'finance'},
   ];
 
   final List<String> _availableIcons = [
-    'restaurant', 'home', 'phone', 'sports_esports', 'card_giftcard',
-    'child_care', 'flight', 'directions_car', 'shopping_cart', 'medical_services',
-    'more_horiz', 'account_balance', 'payments', 'store', 'work', 'receipt_long',
-    'attach_money', 'movie', 'music_note', 'favorite', 'pets', 'local_gas_station',
-    'local_taxi', 'wifi', 'coffee', 'cake', 'smartphone', 'laptop', 'watch',
-    'headphones', 'camera', 'sports_soccer', 'fitness_center', 'pool', 'spa',
-    'school', 'local_library', 'brush', 'beauty', 'checkroom', 'shopping_bag',
+    'restaurant', 'home', 'phone', 'shopping_cart', 'directions_car',
+    'flight', 'medical', 'school', 'sports', 'gift',
+    'child', 'finance', 'salary', 'money', 'savings',
+    'laptop', 'coffee', 'fitness', 'pets', 'movie',
+    'music', 'cake', 'hospital', 'more',
   ];
 
   final List<Color> _availableColors = [
-    const Color(0xFFFF6B6B),
-    const Color(0xFF4ECDC4),
-    const Color(0xFF95E1D3),
-    const Color(0xFFAA96DA),
-    const Color(0xFFFCBAD3),
-    const Color(0xFFFFD93D),
-    const Color(0xFF6BCB77),
-    const Color(0xFF4D96FF),
-    const Color(0xFFFF9F43),
-    const Color(0xFFA29BFE),
-    const Color(0xFFFD79A8),
-    const Color(0xFF00CEC9),
+    const Color(0xFFFFB3BA),
+    const Color(0xFFFFDFBA),
+    const Color(0xFFFFFFBA),
+    const Color(0xFFBAFFC9),
+    const Color(0xFFBAE1FF),
+    const Color(0xFFE0BBE4),
+    const Color(0xFFFFB3E6),
+    const Color(0xFFB3FFDF),
+    const Color(0xFFFFE0B2),
+    const Color(0xFFD4B3FF),
   ];
 
   IconData _getIconData(String iconName) {
     switch (iconName) {
-      case 'restaurant': return Icons.restaurant;
-      case 'home': return Icons.home;
-      case 'phone': return Icons.phone;
-      case 'sports_esports': return Icons.sports_esports;
-      case 'card_giftcard': return Icons.card_giftcard;
-      case 'child_care': return Icons.child_care;
-      case 'flight': return Icons.flight;
-      case 'directions_car': return Icons.directions_car;
-      case 'shopping_cart': return Icons.shopping_cart;
-      case 'medical_services': return Icons.medical_services;
-      case 'more_horiz': return Icons.more_horiz;
-      case 'account_balance': return Icons.account_balance;
-      case 'payments': return Icons.payments;
-      case 'store': return Icons.store;
-      case 'work': return Icons.work;
-      case 'receipt_long': return Icons.receipt_long;
-      case 'attach_money': return Icons.attach_money;
-      case 'movie': return Icons.movie;
-      case 'music_note': return Icons.music_note;
-      case 'favorite': return Icons.favorite;
-      case 'pets': return Icons.pets;
-      case 'local_gas_station': return Icons.local_gas_station;
-      case 'local_taxi': return Icons.local_taxi;
-      case 'wifi': return Icons.wifi;
-      case 'coffee': return Icons.coffee;
-      case 'cake': return Icons.cake;
-      case 'smartphone': return Icons.smartphone;
-      case 'laptop': return Icons.laptop;
-      case 'watch': return Icons.watch;
-      case 'headphones': return Icons.headphones;
-      case 'camera': return Icons.camera;
-      case 'sports_soccer': return Icons.sports_soccer;
-      case 'fitness_center': return Icons.fitness_center;
-      case 'pool': return Icons.pool;
-      case 'spa': return Icons.spa;
-      case 'school': return Icons.school;
-      case 'local_library': return Icons.local_library;
-      case 'brush': return Icons.brush;
-      case 'beauty': return Icons.face;
-      case 'checkroom': return Icons.checkroom;
-      case 'shopping_bag': return Icons.shopping_bag;
-      default: return Icons.category;
+      case 'restaurant': return Icons.restaurant_outlined;
+      case 'home': return Icons.home_outlined;
+      case 'phone':
+      case 'phone_android': return Icons.phone_android_outlined;
+      case 'shopping_cart': return Icons.shopping_cart_outlined;
+      case 'directions_car': return Icons.directions_car_outlined;
+      case 'flight': return Icons.flight_outlined;
+      case 'medical':
+      case 'medical_services': return Icons.medical_services_outlined;
+      case 'school': return Icons.school_outlined;
+      case 'sports':
+      case 'sports_esports': return Icons.sports_esports_outlined;
+      case 'gift':
+      case 'card_giftcard': return Icons.card_giftcard_outlined;
+      case 'child':
+      case 'child_care': return Icons.child_care_outlined;
+      case 'finance':
+      case 'account_balance': return Icons.account_balance_outlined;
+      case 'salary':
+      case 'payments': return Icons.payments_outlined;
+      case 'money':
+      case 'attach_money': return Icons.attach_money_outlined;
+      case 'savings': return Icons.savings_outlined;
+      case 'laptop': return Icons.laptop_mac_outlined;
+      case 'coffee': return Icons.coffee_outlined;
+      case 'fitness':
+      case 'fitness_center': return Icons.fitness_center_outlined;
+      case 'pets': return Icons.pets_outlined;
+      case 'movie': return Icons.movie_outlined;
+      case 'music':
+      case 'music_note': return Icons.music_note_outlined;
+      case 'cake': return Icons.cake_outlined;
+      case 'hospital':
+      case 'local_hospital': return Icons.local_hospital_outlined;
+      case 'more':
+      case 'more_horiz': return Icons.more_horiz_outlined;
+      case 'store': return Icons.store_outlined;
+      case 'work': return Icons.work_outlined;
+      case 'trending_up': return Icons.trending_up_outlined;
+      case 'receipt_long': return Icons.receipt_long_outlined;
+      case 'tv': return Icons.tv_outlined;
+      case 'wifi': return Icons.wifi_outlined;
+      case 'casino': return Icons.casino_outlined;
+      case 'theater_comedy': return Icons.theater_comedy_outlined;
+      case 'mic': return Icons.mic_outlined;
+      case 'celebration': return Icons.celebration_outlined;
+      case 'event': return Icons.event_outlined;
+      case 'favorite': return Icons.favorite_outlined;
+      case 'elderly': return Icons.elderly_outlined;
+      case 'pregnant_woman': return Icons.pregnant_woman_outlined;
+      case 'hotel': return Icons.hotel_outlined;
+      case 'luggage': return Icons.luggage_outlined;
+      case 'subway': return Icons.subway_outlined;
+      case 'directions_bus': return Icons.directions_bus_outlined;
+      case 'local_police': return Icons.local_police_outlined;
+      case 'local_parking': return Icons.local_parking_outlined;
+      case 'build': return Icons.build_outlined;
+      case 'badge': return Icons.badge_outlined;
+      case 'pedal_bike': return Icons.pedal_bike_outlined;
+      case 'local_gas_station': return Icons.local_gas_station_outlined;
+      case 'train': return Icons.train_outlined;
+      case 'local_taxi': return Icons.local_taxi_outlined;
+      case 'devices': return Icons.devices_outlined;
+      case 'face': return Icons.face_outlined;
+      case 'soap': return Icons.soap_outlined;
+      case 'checkroom': return Icons.checkroom_outlined;
+      case 'local_mall': return Icons.local_mall_outlined;
+      case 'menu_book': return Icons.menu_book_outlined;
+      case 'kitchen': return Icons.kitchen_outlined;
+      case 'diamond': return Icons.diamond_outlined;
+      case 'chair': return Icons.chair_outlined;
+      case 'cleaning_services': return Icons.cleaning_services_outlined;
+      case 'shopping_bag': return Icons.shopping_bag_outlined;
+      case 'local_shipping': return Icons.local_shipping_outlined;
+      case 'refund': return Icons.currency_exchange_outlined;
+      case 'bed': return Icons.bed_outlined;
+      case 'medication': return Icons.medication_outlined;
+      case 'health_and_safety': return Icons.health_and_safety_outlined;
+      case 'money_off': return Icons.money_off_outlined;
+      case 'report_problem': return Icons.report_problem_outlined;
+      case 'trending_down': return Icons.trending_down_outlined;
+      case 'security': return Icons.security_outlined;
+      case 'percent': return Icons.percent_outlined;
+      case 'description': return Icons.description_outlined;
+      case 'receipt': return Icons.receipt_outlined;
+      case 'gavel': return Icons.gavel_outlined;
+      case 'account_balance_wallet': return Icons.account_balance_wallet_outlined;
+      case 'schedule': return Icons.schedule_outlined;
+      case 'support_agent': return Icons.support_agent_outlined;
+      case 'chat': return Icons.chat_outlined;
+      case 'show_chart': return Icons.show_chart_outlined;
+      case 'candlestick_chart': return Icons.candlestick_chart_outlined;
+      case 'monetization_on': return Icons.monetization_on_outlined;
+      case 'smartphone': return Icons.smartphone_outlined;
+      case 'edit_note': return Icons.edit_note_outlined;
+      case 'redeem': return Icons.redeem_outlined;
+      case 'auto_awesome': return Icons.auto_awesome_outlined;
+      default: return Icons.category_outlined;
     }
   }
 
   String _colorToHex(Color color) {
-    final r = color.r.toInt();
-    final g = color.g.toInt();
-    final b = color.b.toInt();
-    return '#${(r << 16 | g << 8 | b).toRadixString(16).substring(2).toUpperCase()}';
+    final r = color.red;
+    final g = color.green;
+    final b = color.blue;
+    final hex = (r << 16 | g << 8 | b).toRadixString(16).padLeft(6, '0');
+    return '#$hex'.toUpperCase();
+  }
+
+  Color _hexToColor(String hex) {
+    final hexCode = hex.replaceAll('#', '');
+    return Color(int.parse('FF$hexCode', radix: 16));
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    if (isEditing && widget.category != null) {
+      _categoryName = widget.category!.name;
+      _selectedIcon = widget.category!.icon;
+      _selectedColor = _hexToColor(widget.category!.color);
+      _selectedParentId = widget.category!.parentId;
+    }
+  }
+
+  String _getParentCategoryName(String? parentId) {
+    if (parentId == null) return '未分类';
+    for (var cat in _parentCategories) {
+      if (cat['id'] == parentId) {
+        return cat['name'];
+      }
+    }
+    return '未分类';
   }
 
   @override
@@ -567,7 +641,7 @@ class _AddCustomCategorySheetState extends State<AddCustomCategorySheet> {
               ),
             ),
             Text(
-              '添加自定义分类',
+              isEditing ? '编辑分类' : '添加自定义分类',
               style: TextStyle(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
@@ -635,9 +709,9 @@ class _AddCustomCategorySheetState extends State<AddCustomCategorySheet> {
               child: GridView.builder(
                 padding: EdgeInsets.all(8.w),
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 6,
-                  mainAxisSpacing: 8.h,
-                  crossAxisSpacing: 8.w,
+                  crossAxisCount: 5,
+                  mainAxisSpacing: 12.h,
+                  crossAxisSpacing: 12.w,
                 ),
                 itemCount: _availableIcons.length,
                 itemBuilder: (context, index) {
@@ -651,14 +725,14 @@ class _AddCustomCategorySheetState extends State<AddCustomCategorySheet> {
                     },
                     child: Container(
                       decoration: BoxDecoration(
-                        color: isSelected ? _selectedColor.withValues(alpha: 0.2) : Colors.grey[100],
-                        borderRadius: BorderRadius.circular(8.r),
-                        border: isSelected ? Border.all(color: _selectedColor, width: 2) : null,
+                        color: isSelected ? _selectedColor.withValues(alpha: 0.15) : Colors.grey[50],
+                        borderRadius: BorderRadius.circular(12.r),
+                        border: isSelected ? Border.all(color: _selectedColor, width: 2) : Border.all(color: Colors.grey[200]!),
                       ),
                       child: Icon(
                         _getIconData(icon),
-                        color: isSelected ? _selectedColor : Colors.grey[600],
-                        size: 24.sp,
+                        color: isSelected ? _selectedColor : Colors.grey[500],
+                        size: 28.sp,
                       ),
                     ),
                   );
@@ -669,8 +743,8 @@ class _AddCustomCategorySheetState extends State<AddCustomCategorySheet> {
             Text('选择颜色', style: TextStyle(fontSize: 14.sp, color: Colors.grey[600])),
             SizedBox(height: 8.h),
             Wrap(
-              spacing: 12.w,
-              runSpacing: 12.h,
+              spacing: 16.w,
+              runSpacing: 16.h,
               children: _availableColors.map((color) {
                 final isSelected = color == _selectedColor;
                 return GestureDetector(
@@ -680,12 +754,15 @@ class _AddCustomCategorySheetState extends State<AddCustomCategorySheet> {
                     });
                   },
                   child: Container(
-                    width: 40.w,
-                    height: 40.w,
+                    width: 44.w,
+                    height: 44.w,
                     decoration: BoxDecoration(
                       color: color,
                       shape: BoxShape.circle,
-                      border: isSelected ? Border.all(color: Colors.black, width: 3) : null,
+                      border: isSelected ? Border.all(color: Colors.white, width: 3) : null,
+                      boxShadow: isSelected ? [
+                        BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 8, spreadRadius: 2),
+                      ] : null,
                     ),
                     child: isSelected ? const Icon(Icons.check, color: Colors.white, size: 20) : null,
                   ),
@@ -704,8 +781,8 @@ class _AddCustomCategorySheetState extends State<AddCustomCategorySheet> {
                     borderRadius: BorderRadius.circular(8.r),
                   ),
                 ),
-                onPressed: _selectedParentId != null && _categoryName.isNotEmpty ? _saveCategory : null,
-                child: Text('保存', style: TextStyle(fontSize: 16.sp)),
+                onPressed: _categoryName.isNotEmpty ? _saveCategory : null,
+                child: Text(isEditing ? '保存修改' : '保存', style: TextStyle(fontSize: 16.sp)),
               ),
             ),
             SizedBox(height: 16.h),
@@ -716,31 +793,47 @@ class _AddCustomCategorySheetState extends State<AddCustomCategorySheet> {
   }
 
   Future<void> _saveCategory() async {
-    if (_selectedParentId == null || _categoryName.isEmpty) return;
+    if (_categoryName.isEmpty) return;
 
     final provider = context.read<CategoryProvider>();
-    final customCategory = Category(
-      id: 'custom_${_uuid.v4()}',
-      name: _categoryName,
-      icon: _selectedIcon,
-      color: _colorToHex(_selectedColor),
-      sortOrder: 0,
-      parentId: _selectedParentId,
-      isCustom: true,
-    );
 
     try {
-      await provider.addCustomCategory(customCategory);
-      if (mounted) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('添加成功')),
+      if (isEditing) {
+        final updatedCategory = widget.category!.copyWith(
+          name: _categoryName,
+          icon: _selectedIcon,
+          color: _colorToHex(_selectedColor),
         );
+        await provider.updateCustomCategory(updatedCategory);
+        if (mounted) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('修改成功')),
+          );
+        }
+      } else {
+        if (_selectedParentId == null) return;
+        final customCategory = Category(
+          id: 'custom_${_uuid.v4()}',
+          name: _categoryName,
+          icon: _selectedIcon,
+          color: _colorToHex(_selectedColor),
+          sortOrder: 0,
+          parentId: _selectedParentId,
+          isCustom: true,
+        );
+        await provider.addCustomCategory(customCategory);
+        if (mounted) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('添加成功')),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('添加失败: $e')),
+          SnackBar(content: Text('操作失败: $e')),
         );
       }
     }

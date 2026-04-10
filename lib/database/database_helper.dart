@@ -945,10 +945,11 @@ class DatabaseHelper {
 
   Future<List<models.Transaction>> getTransactionsByDateRange(DateTime start, DateTime end) async {
     final db = await instance.database;
+    final endOfDay = DateTime(end.year, end.month, end.day, 23, 59, 59);
     final result = await db.query(
       'transactions',
       where: 'date >= ? AND date <= ?',
-      whereArgs: [start.toIso8601String(), end.toIso8601String()],
+      whereArgs: [start.toIso8601String(), endOfDay.toIso8601String()],
       orderBy: 'date DESC, created_at DESC',
     );
     return result.map((map) => models.Transaction.fromMap(map)).toList();
@@ -1003,8 +1004,9 @@ class DatabaseHelper {
     }
 
     if (endDate != null) {
+      final endOfDay = DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
       conditions.add('date <= ?');
-      args.add(endDate.toIso8601String());
+      args.add(endOfDay.toIso8601String());
     }
 
     if (keyword != null && keyword.isNotEmpty) {
@@ -1309,16 +1311,17 @@ class DatabaseHelper {
 
   Future<Map<String, double>> getExpenseByCategory(DateTime start, DateTime end) async {
     final db = await instance.database;
+    final endOfDay = DateTime(end.year, end.month, end.day, 23, 59, 59);
     final result = await db.rawQuery('''
       SELECT c.name, SUM(t.amount) as total
       FROM transactions t
       JOIN categories c ON t.category_id = c.id
-      WHERE t.type = 'expense' 
-        AND t.date >= ? 
+      WHERE t.type = 'expense'
+        AND t.date >= ?
         AND t.date <= ?
       GROUP BY c.name
       ORDER BY total DESC
-    ''', [start.toIso8601String(), end.toIso8601String()]);
+    ''', [start.toIso8601String(), endOfDay.toIso8601String()]);
 
     Map<String, double> map = {};
     for (var row in result) {
@@ -1329,16 +1332,17 @@ class DatabaseHelper {
 
   Future<Map<String, double>> getIncomeByCategory(DateTime start, DateTime end) async {
     final db = await instance.database;
+    final endOfDay = DateTime(end.year, end.month, end.day, 23, 59, 59);
     final result = await db.rawQuery('''
       SELECT c.name, SUM(t.amount) as total
       FROM transactions t
       JOIN categories c ON t.category_id = c.id
-      WHERE t.type = 'income' 
-        AND t.date >= ? 
+      WHERE t.type = 'income'
+        AND t.date >= ?
         AND t.date <= ?
       GROUP BY c.name
       ORDER BY total DESC
-    ''', [start.toIso8601String(), end.toIso8601String()]);
+    ''', [start.toIso8601String(), endOfDay.toIso8601String()]);
 
     Map<String, double> map = {};
     for (var row in result) {
@@ -1349,41 +1353,44 @@ class DatabaseHelper {
 
   Future<double> getTotalExpense(DateTime start, DateTime end) async {
     final db = await instance.database;
+    final endOfDay = DateTime(end.year, end.month, end.day, 23, 59, 59);
     final result = await db.rawQuery('''
       SELECT SUM(amount) as total
       FROM transactions
-      WHERE type = 'expense' 
-        AND date >= ? 
+      WHERE type = 'expense'
+        AND date >= ?
         AND date <= ?
-    ''', [start.toIso8601String(), end.toIso8601String()]);
+    ''', [start.toIso8601String(), endOfDay.toIso8601String()]);
 
     return result.first['total'] as double? ?? 0.0;
   }
 
   Future<double> getTotalIncome(DateTime start, DateTime end) async {
     final db = await instance.database;
+    final endOfDay = DateTime(end.year, end.month, end.day, 23, 59, 59);
     final result = await db.rawQuery('''
       SELECT SUM(amount) as total
       FROM transactions
-      WHERE type = 'income' 
-        AND date >= ? 
+      WHERE type = 'income'
+        AND date >= ?
         AND date <= ?
-    ''', [start.toIso8601String(), end.toIso8601String()]);
+    ''', [start.toIso8601String(), endOfDay.toIso8601String()]);
 
     return result.first['total'] as double? ?? 0.0;
   }
 
   Future<Map<String, double>> getDailyExpense(DateTime start, DateTime end) async {
     final db = await instance.database;
+    final endOfDay = DateTime(end.year, end.month, end.day, 23, 59, 59);
     final result = await db.rawQuery('''
       SELECT date(date) as day, SUM(amount) as total
       FROM transactions
-      WHERE type = 'expense' 
-        AND date >= ? 
+      WHERE type = 'expense'
+        AND date >= ?
         AND date <= ?
       GROUP BY date(date)
       ORDER BY day ASC
-    ''', [start.toIso8601String(), end.toIso8601String()]);
+    ''', [start.toIso8601String(), endOfDay.toIso8601String()]);
 
     Map<String, double> map = {};
     for (var row in result) {
@@ -1394,15 +1401,16 @@ class DatabaseHelper {
 
   Future<Map<String, double>> getDailyIncome(DateTime start, DateTime end) async {
     final db = await instance.database;
+    final endOfDay = DateTime(end.year, end.month, end.day, 23, 59, 59);
     final result = await db.rawQuery('''
       SELECT date(date) as day, SUM(amount) as total
       FROM transactions
-      WHERE type = 'income' 
-        AND date >= ? 
+      WHERE type = 'income'
+        AND date >= ?
         AND date <= ?
       GROUP BY date(date)
       ORDER BY day ASC
-    ''', [start.toIso8601String(), end.toIso8601String()]);
+    ''', [start.toIso8601String(), endOfDay.toIso8601String()]);
 
     Map<String, double> map = {};
     for (var row in result) {
@@ -1413,16 +1421,17 @@ class DatabaseHelper {
 
   Future<Map<String, double>> getExpenseByAccount(DateTime start, DateTime end) async {
     final db = await instance.database;
+    final endOfDay = DateTime(end.year, end.month, end.day, 23, 59, 59);
     final result = await db.rawQuery('''
       SELECT a.name, SUM(t.amount) as total
       FROM transactions t
       JOIN accounts a ON t.account_id = a.id
-      WHERE t.type = 'expense' 
-        AND t.date >= ? 
+      WHERE t.type = 'expense'
+        AND t.date >= ?
         AND t.date <= ?
       GROUP BY a.name
       ORDER BY total DESC
-    ''', [start.toIso8601String(), end.toIso8601String()]);
+    ''', [start.toIso8601String(), endOfDay.toIso8601String()]);
 
     Map<String, double> map = {};
     for (var row in result) {
@@ -1433,16 +1442,17 @@ class DatabaseHelper {
 
   Future<Map<String, double>> getIncomeByAccount(DateTime start, DateTime end) async {
     final db = await instance.database;
+    final endOfDay = DateTime(end.year, end.month, end.day, 23, 59, 59);
     final result = await db.rawQuery('''
       SELECT a.name, SUM(t.amount) as total
       FROM transactions t
       JOIN accounts a ON t.account_id = a.id
-      WHERE t.type = 'income' 
-        AND t.date >= ? 
+      WHERE t.type = 'income'
+        AND t.date >= ?
         AND t.date <= ?
       GROUP BY a.name
       ORDER BY total DESC
-    ''', [start.toIso8601String(), end.toIso8601String()]);
+    ''', [start.toIso8601String(), endOfDay.toIso8601String()]);
 
     Map<String, double> map = {};
     for (var row in result) {
@@ -1457,24 +1467,25 @@ class DatabaseHelper {
     String? owner,
   }) async {
     final db = await instance.database;
+    final endOfDay = DateTime(end.year, end.month, end.day, 23, 59, 59);
     String whereClause = "t.type = 'expense' AND t.date >= ? AND t.date <= ?";
-    List<dynamic> args = [start.toIso8601String(), end.toIso8601String()];
-    
+    List<dynamic> args = [start.toIso8601String(), endOfDay.toIso8601String()];
+
     if (owner != null && owner.isNotEmpty) {
       whereClause += " AND t.owner = ?";
       args.add(owner);
     }
-    
+
     final result = await db.rawQuery('''
-      SELECT 
+      SELECT
         t.id, t.amount, t.date, t.remark, t.merchant,
         c.name as category_name, c.icon as category_icon, c.color as category_color
       FROM transactions t
       LEFT JOIN categories c ON t.category_id = c.id
       WHERE $whereClause
-      ORDER BY t.date DESC
+      ORDER BY t.amount DESC
     ''', args);
-    
+
     return result;
   }
 
@@ -1484,24 +1495,25 @@ class DatabaseHelper {
     String? owner,
   }) async {
     final db = await instance.database;
+    final endOfDay = DateTime(end.year, end.month, end.day, 23, 59, 59);
     String whereClause = "t.type = 'income' AND t.date >= ? AND t.date <= ?";
-    List<dynamic> args = [start.toIso8601String(), end.toIso8601String()];
-    
+    List<dynamic> args = [start.toIso8601String(), endOfDay.toIso8601String()];
+
     if (owner != null && owner.isNotEmpty) {
       whereClause += " AND t.owner = ?";
       args.add(owner);
     }
-    
+
     final result = await db.rawQuery('''
-      SELECT 
+      SELECT
         t.id, t.amount, t.date, t.remark, t.merchant,
         c.name as category_name, c.icon as category_icon, c.color as category_color
       FROM transactions t
       LEFT JOIN categories c ON t.category_id = c.id
       WHERE $whereClause
-      ORDER BY t.date DESC
+      ORDER BY t.amount DESC
     ''', args);
-    
+
     return result;
   }
 
@@ -1511,16 +1523,17 @@ class DatabaseHelper {
     String? accountName,
   }) async {
     final db = await instance.database;
+    final endOfDay = DateTime(end.year, end.month, end.day, 23, 59, 59);
     String whereClause = "t.type = 'income' AND t.date >= ? AND t.date <= ?";
-    List<dynamic> args = [start.toIso8601String(), end.toIso8601String()];
-    
+    List<dynamic> args = [start.toIso8601String(), endOfDay.toIso8601String()];
+
     if (accountName != null && accountName.isNotEmpty) {
       whereClause += " AND a.name = ?";
       args.add(accountName);
     }
-    
+
     final result = await db.rawQuery('''
-      SELECT 
+      SELECT
         t.id, t.amount, t.date, t.remark, t.merchant,
         c.name as category_name, c.icon as category_icon, c.color as category_color,
         a.name as account_name
@@ -1528,9 +1541,9 @@ class DatabaseHelper {
       LEFT JOIN categories c ON t.category_id = c.id
       JOIN accounts a ON t.account_id = a.id
       WHERE $whereClause
-      ORDER BY t.date DESC
+      ORDER BY t.amount DESC
     ''', args);
-    
+
     return result;
   }
 
@@ -1540,16 +1553,17 @@ class DatabaseHelper {
     String? accountName,
   }) async {
     final db = await instance.database;
+    final endOfDay = DateTime(end.year, end.month, end.day, 23, 59, 59);
     String whereClause = "t.type = 'expense' AND t.date >= ? AND t.date <= ?";
-    List<dynamic> args = [start.toIso8601String(), end.toIso8601String()];
-    
+    List<dynamic> args = [start.toIso8601String(), endOfDay.toIso8601String()];
+
     if (accountName != null && accountName.isNotEmpty) {
       whereClause += " AND a.name = ?";
       args.add(accountName);
     }
-    
+
     final result = await db.rawQuery('''
-      SELECT 
+      SELECT
         t.id, t.amount, t.date, t.remark, t.merchant,
         c.name as category_name, c.icon as category_icon, c.color as category_color,
         a.name as account_name
@@ -1557,13 +1571,71 @@ class DatabaseHelper {
       LEFT JOIN categories c ON t.category_id = c.id
       JOIN accounts a ON t.account_id = a.id
       WHERE $whereClause
-      ORDER BY t.date DESC
+      ORDER BY t.amount DESC
     ''', args);
-    
+
     return result;
   }
 
-  // ==================== TopN 消费排行 ====================
+  Future<List<Map<String, dynamic>>> getExpenseDetailsByCategory({
+    required DateTime start,
+    required DateTime end,
+    String? categoryName,
+  }) async {
+    final db = await instance.database;
+    final endOfDay = DateTime(end.year, end.month, end.day, 23, 59, 59);
+    String whereClause = "t.type = 'expense' AND t.date >= ? AND t.date <= ?";
+    List<dynamic> args = [start.toIso8601String(), endOfDay.toIso8601String()];
+
+    if (categoryName != null && categoryName.isNotEmpty) {
+      whereClause += " AND c.name = ?";
+      args.add(categoryName);
+    }
+
+    final result = await db.rawQuery('''
+      SELECT
+        t.id, t.amount, t.date, t.remark, t.merchant,
+        c.name as category_name, c.icon as category_icon, c.color as category_color,
+        a.name as account_name
+      FROM transactions t
+      LEFT JOIN categories c ON t.category_id = c.id
+      JOIN accounts a ON t.account_id = a.id
+      WHERE $whereClause
+      ORDER BY t.amount DESC
+    ''', args);
+
+    return result;
+  }
+
+  Future<List<Map<String, dynamic>>> getIncomeDetailsByCategory({
+    required DateTime start,
+    required DateTime end,
+    String? categoryName,
+  }) async {
+    final db = await instance.database;
+    final endOfDay = DateTime(end.year, end.month, end.day, 23, 59, 59);
+    String whereClause = "t.type = 'income' AND t.date >= ? AND t.date <= ?";
+    List<dynamic> args = [start.toIso8601String(), endOfDay.toIso8601String()];
+
+    if (categoryName != null && categoryName.isNotEmpty) {
+      whereClause += " AND c.name = ?";
+      args.add(categoryName);
+    }
+
+    final result = await db.rawQuery('''
+      SELECT
+        t.id, t.amount, t.date, t.remark, t.merchant,
+        c.name as category_name, c.icon as category_icon, c.color as category_color,
+        a.name as account_name
+      FROM transactions t
+      LEFT JOIN categories c ON t.category_id = c.id
+      JOIN accounts a ON t.account_id = a.id
+      WHERE $whereClause
+      ORDER BY t.amount DESC
+    ''', args);
+
+    return result;
+  }
 
   Future<List<Map<String, dynamic>>> getExpenseTopNByCategory({
     required DateTime start,
@@ -1571,17 +1643,18 @@ class DatabaseHelper {
     int limit = 10,
   }) async {
     final db = await instance.database;
+    final endOfDay = DateTime(end.year, end.month, end.day, 23, 59, 59);
     return await db.rawQuery('''
       SELECT c.id, c.name, c.icon, c.color, SUM(t.amount) as total, COUNT(*) as count
       FROM transactions t
       JOIN categories c ON t.category_id = c.id
-      WHERE t.type = 'expense' 
-        AND t.date >= ? 
+      WHERE t.type = 'expense'
+        AND t.date >= ?
         AND t.date <= ?
       GROUP BY c.id
       ORDER BY total DESC
       LIMIT ?
-    ''', [start.toIso8601String(), end.toIso8601String(), limit]);
+    ''', [start.toIso8601String(), endOfDay.toIso8601String(), limit]);
   }
 
   Future<List<Map<String, dynamic>>> getExpenseTopNByMerchant({
@@ -1590,18 +1663,19 @@ class DatabaseHelper {
     int limit = 10,
   }) async {
     final db = await instance.database;
+    final endOfDay = DateTime(end.year, end.month, end.day, 23, 59, 59);
     return await db.rawQuery('''
       SELECT t.merchant, SUM(t.amount) as total, COUNT(*) as count
       FROM transactions t
-      WHERE t.type = 'expense' 
+      WHERE t.type = 'expense'
         AND t.merchant IS NOT NULL
         AND t.merchant != ''
-        AND t.date >= ? 
+        AND t.date >= ?
         AND t.date <= ?
       GROUP BY t.merchant
       ORDER BY total DESC
       LIMIT ?
-    ''', [start.toIso8601String(), end.toIso8601String(), limit]);
+    ''', [start.toIso8601String(), endOfDay.toIso8601String(), limit]);
   }
 
   Future<List<Map<String, dynamic>>> getExpenseTopNByProject({
@@ -1610,18 +1684,19 @@ class DatabaseHelper {
     int limit = 10,
   }) async {
     final db = await instance.database;
+    final endOfDay = DateTime(end.year, end.month, end.day, 23, 59, 59);
     return await db.rawQuery('''
       SELECT t.project, SUM(t.amount) as total, COUNT(*) as count
       FROM transactions t
-      WHERE t.type = 'expense' 
+      WHERE t.type = 'expense'
         AND t.project IS NOT NULL
         AND t.project != ''
-        AND t.date >= ? 
+        AND t.date >= ?
         AND t.date <= ?
       GROUP BY t.project
       ORDER BY total DESC
       LIMIT ?
-    ''', [start.toIso8601String(), end.toIso8601String(), limit]);
+    ''', [start.toIso8601String(), endOfDay.toIso8601String(), limit]);
   }
 
   Future<List<Map<String, dynamic>>> getExpenseTopNByAccount({
@@ -1630,17 +1705,18 @@ class DatabaseHelper {
     int limit = 10,
   }) async {
     final db = await instance.database;
+    final endOfDay = DateTime(end.year, end.month, end.day, 23, 59, 59);
     return await db.rawQuery('''
       SELECT a.id, a.name, a.icon, a.type, SUM(t.amount) as total, COUNT(*) as count
       FROM transactions t
       JOIN accounts a ON t.account_id = a.id
-      WHERE t.type = 'expense' 
-        AND t.date >= ? 
+      WHERE t.type = 'expense'
+        AND t.date >= ?
         AND t.date <= ?
       GROUP BY a.id
       ORDER BY total DESC
       LIMIT ?
-    ''', [start.toIso8601String(), end.toIso8601String(), limit]);
+    ''', [start.toIso8601String(), endOfDay.toIso8601String(), limit]);
   }
 
   // ==================== 商家消费分析 ====================
@@ -1650,8 +1726,9 @@ class DatabaseHelper {
     required DateTime end,
   }) async {
     final db = await instance.database;
+    final endOfDay = DateTime(end.year, end.month, end.day, 23, 59, 59);
     return await db.rawQuery('''
-      SELECT 
+      SELECT
         t.merchant,
         SUM(t.amount) as total,
         COUNT(*) as count,
@@ -1661,14 +1738,14 @@ class DatabaseHelper {
         c.color as category_color
       FROM transactions t
       LEFT JOIN categories c ON t.category_id = c.id
-      WHERE t.type = 'expense' 
+      WHERE t.type = 'expense'
         AND t.merchant IS NOT NULL
         AND t.merchant != ''
-        AND t.date >= ? 
+        AND t.date >= ?
         AND t.date <= ?
       GROUP BY t.merchant
       ORDER BY total DESC
-    ''', [start.toIso8601String(), end.toIso8601String()]);
+    ''', [start.toIso8601String(), endOfDay.toIso8601String()]);
   }
 
   Future<Map<String, double>> getMerchantMonthlyTrend({
@@ -1677,16 +1754,17 @@ class DatabaseHelper {
     required DateTime end,
   }) async {
     final db = await instance.database;
+    final endOfDay = DateTime(end.year, end.month, end.day, 23, 59, 59);
     final result = await db.rawQuery('''
       SELECT strftime('%Y-%m', t.date) as month, SUM(t.amount) as total
       FROM transactions t
-      WHERE t.type = 'expense' 
+      WHERE t.type = 'expense'
         AND t.merchant = ?
-        AND t.date >= ? 
+        AND t.date >= ?
         AND t.date <= ?
       GROUP BY strftime('%Y-%m', t.date)
       ORDER BY month ASC
-    ''', [merchant, start.toIso8601String(), end.toIso8601String()]);
+    ''', [merchant, start.toIso8601String(), endOfDay.toIso8601String()]);
 
     Map<String, double> map = {};
     for (var row in result) {
@@ -1695,15 +1773,14 @@ class DatabaseHelper {
     return map;
   }
 
-  // ==================== 转账记录报告 ====================
-
   Future<List<Map<String, dynamic>>> getTransferRecords({
     required DateTime start,
     required DateTime end,
   }) async {
     final db = await instance.database;
+    final endOfDay = DateTime(end.year, end.month, end.day, 23, 59, 59);
     return await db.rawQuery('''
-      SELECT 
+      SELECT
         t.id,
         t.amount,
         t.date,
@@ -1716,10 +1793,10 @@ class DatabaseHelper {
       JOIN accounts a1 ON t.account_id = a1.id
       JOIN accounts a2 ON t.target_account_id = a2.id
       WHERE t.type = 'transfer'
-        AND t.date >= ? 
+        AND t.date >= ?
         AND t.date <= ?
       ORDER BY t.date DESC
-    ''', [start.toIso8601String(), end.toIso8601String()]);
+    ''', [start.toIso8601String(), endOfDay.toIso8601String()]);
   }
 
   Future<Map<String, dynamic>> getTransferSummary({
@@ -1727,38 +1804,39 @@ class DatabaseHelper {
     required DateTime end,
   }) async {
     final db = await instance.database;
-    
+    final endOfDay = DateTime(end.year, end.month, end.day, 23, 59, 59);
+
     final totalResult = await db.rawQuery('''
-      SELECT 
+      SELECT
         COALESCE(SUM(amount), 0) as total,
         COUNT(*) as count
       FROM transactions
       WHERE type = 'transfer'
-        AND date >= ? 
+        AND date >= ?
         AND date <= ?
-    ''', [start.toIso8601String(), end.toIso8601String()]);
+    ''', [start.toIso8601String(), endOfDay.toIso8601String()]);
 
     final fromResult = await db.rawQuery('''
       SELECT a.name, a.icon, SUM(t.amount) as total
       FROM transactions t
       JOIN accounts a ON t.account_id = a.id
       WHERE t.type = 'transfer'
-        AND t.date >= ? 
+        AND t.date >= ?
         AND t.date <= ?
       GROUP BY a.name
       ORDER BY total DESC
-    ''', [start.toIso8601String(), end.toIso8601String()]);
+    ''', [start.toIso8601String(), endOfDay.toIso8601String()]);
 
     final toResult = await db.rawQuery('''
       SELECT a.name, a.icon, SUM(t.amount) as total
       FROM transactions t
       JOIN accounts a ON t.target_account_id = a.id
       WHERE t.type = 'transfer'
-        AND t.date >= ? 
+        AND t.date >= ?
         AND t.date <= ?
       GROUP BY a.name
       ORDER BY total DESC
-    ''', [start.toIso8601String(), end.toIso8601String()]);
+    ''', [start.toIso8601String(), endOfDay.toIso8601String()]);
 
     return {
       'total': totalResult.first['total'] ?? 0.0,
@@ -1768,23 +1846,22 @@ class DatabaseHelper {
     };
   }
 
-  // ==================== 消费热力图 ====================
-
   Future<Map<int, double>> getExpenseByDayOfWeek({
     required DateTime start,
     required DateTime end,
   }) async {
     final db = await instance.database;
+    final endOfDay = DateTime(end.year, end.month, end.day, 23, 59, 59);
     final result = await db.rawQuery('''
-      SELECT 
+      SELECT
         CAST(strftime('%w', date) AS INTEGER) as day_of_week,
         SUM(amount) as total
       FROM transactions
       WHERE type = 'expense'
-        AND date >= ? 
+        AND date >= ?
         AND date <= ?
       GROUP BY strftime('%w', date)
-    ''', [start.toIso8601String(), end.toIso8601String()]);
+    ''', [start.toIso8601String(), endOfDay.toIso8601String()]);
 
     Map<int, double> map = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0};
     for (var row in result) {
@@ -1798,16 +1875,17 @@ class DatabaseHelper {
     required DateTime end,
   }) async {
     final db = await instance.database;
+    final endOfDay = DateTime(end.year, end.month, end.day, 23, 59, 59);
     final result = await db.rawQuery('''
-      SELECT 
+      SELECT
         CAST(strftime('%d', date) AS INTEGER) as day,
         SUM(amount) as total
       FROM transactions
       WHERE type = 'expense'
-        AND date >= ? 
+        AND date >= ?
         AND date <= ?
       GROUP BY strftime('%d', date)
-    ''', [start.toIso8601String(), end.toIso8601String()]);
+    ''', [start.toIso8601String(), endOfDay.toIso8601String()]);
 
     Map<int, double> map = {};
     for (var row in result) {
@@ -1821,16 +1899,17 @@ class DatabaseHelper {
     required DateTime end,
   }) async {
     final db = await instance.database;
+    final endOfDay = DateTime(end.year, end.month, end.day, 23, 59, 59);
     final result = await db.rawQuery('''
-      SELECT 
+      SELECT
         date(date) as day,
         SUM(amount) as total
       FROM transactions
       WHERE type = 'expense'
-        AND date >= ? 
+        AND date >= ?
         AND date <= ?
       GROUP BY date(date)
-    ''', [start.toIso8601String(), end.toIso8601String()]);
+    ''', [start.toIso8601String(), endOfDay.toIso8601String()]);
 
     Map<String, double> map = {};
     for (var row in result) {
@@ -1839,16 +1918,15 @@ class DatabaseHelper {
     return map;
   }
 
-  // ==================== 周期性支出分析 ====================
-
   Future<List<Map<String, dynamic>>> getRecurringExpenses({
     required DateTime start,
     required DateTime end,
   }) async {
     final db = await instance.database;
-    
+    final endOfDay = DateTime(end.year, end.month, end.day, 23, 59, 59);
+
     return await db.rawQuery('''
-      SELECT 
+      SELECT
         category_id,
         c.name as category_name,
         c.icon as category_icon,
@@ -1862,12 +1940,12 @@ class DatabaseHelper {
       FROM transactions t
       JOIN categories c ON t.category_id = c.id
       WHERE t.type = 'expense'
-        AND t.date >= ? 
+        AND t.date >= ?
         AND t.date <= ?
       GROUP BY category_id, COALESCE(merchant, ''), COALESCE(project, '')
       HAVING count >= 3
       ORDER BY avg_amount DESC
-    ''', [start.toIso8601String(), end.toIso8601String()]);
+    ''', [start.toIso8601String(), endOfDay.toIso8601String()]);
   }
 
   // ==================== 商家学习 ====================

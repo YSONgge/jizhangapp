@@ -1153,6 +1153,9 @@ class _OwnerViewState extends State<_OwnerView> {
   Map<String, List<Map<String, dynamic>>> _expenseDetailsCache = {};
   Map<String, List<Map<String, dynamic>>> _incomeDetailsCache = {};
 
+  String _expenseCacheKey(String owner) => 'expense_$owner';
+  String _incomeCacheKey(String owner) => 'income_$owner';
+
   @override
   Widget build(BuildContext context) {
     return Consumer<TransactionProvider>(
@@ -1324,12 +1327,13 @@ class _OwnerViewState extends State<_OwnerView> {
               final ownerData = entry.value;
               final percentage = total > 0 ? ownerData.value / total : 0.0;
               final isExpanded = expandedMap[ownerData.key] ?? false;
+              final cacheKey = isExpense ? _expenseCacheKey(ownerData.key) : _incomeCacheKey(ownerData.key);
 
               return Column(
                 children: [
                   GestureDetector(
                     onTap: () async {
-                      if (!isExpanded && !cache.containsKey(ownerData.key)) {
+                      if (!isExpanded && !cache.containsKey(cacheKey)) {
                         List<Map<String, dynamic>> details;
                         if (isExpense) {
                           details = await DatabaseHelper.instance.getExpenseDetailsByOwner(
@@ -1344,7 +1348,7 @@ class _OwnerViewState extends State<_OwnerView> {
                             owner: ownerData.key,
                           );
                         }
-                        cache[ownerData.key] = details;
+                        cache[cacheKey] = details;
                       }
                       expandedMap[ownerData.key] = !isExpanded;
                       onToggle(ownerData.key);
@@ -1412,8 +1416,8 @@ class _OwnerViewState extends State<_OwnerView> {
                       ),
                     ),
                   ),
-                  if (isExpanded && cache.containsKey(ownerData.key))
-                    _buildDetailList(cache[ownerData.key]!, color),
+                  if (isExpanded && cache.containsKey(cacheKey))
+                    _buildDetailList(cache[cacheKey]!, color),
                 ],
               );
             }),
@@ -1441,7 +1445,7 @@ class _OwnerViewState extends State<_OwnerView> {
         borderRadius: BorderRadius.circular(8.r),
       ),
       child: Column(
-        children: details.take(10).map((detail) {
+        children: details.map((detail) {
           final date = DateTime.parse(detail['date'] as String);
           final amount = (detail['amount'] as num).toDouble();
           final merchant = detail['merchant'] as String?;
@@ -1533,6 +1537,9 @@ class _AccountViewState extends State<_AccountView> {
   final Map<String, bool> _expandedIncomeAccounts = {};
   Map<String, List<Map<String, dynamic>>> _expenseDetailsCache = {};
   Map<String, List<Map<String, dynamic>>> _incomeDetailsCache = {};
+
+  String _expenseCacheKey(String account) => 'expense_$account';
+  String _incomeCacheKey(String account) => 'income_$account';
 
   @override
   Widget build(BuildContext context) {
@@ -1645,12 +1652,13 @@ class _AccountViewState extends State<_AccountView> {
               final accountData = entry.value;
               final percentage = total > 0 ? accountData.value / total : 0.0;
               final isExpanded = expandedMap[accountData.key] ?? false;
+              final cacheKey = isExpense ? _expenseCacheKey(accountData.key) : _incomeCacheKey(accountData.key);
 
               return Column(
                 children: [
                   GestureDetector(
                     onTap: () async {
-                      if (!isExpanded && !cache.containsKey(accountData.key)) {
+                      if (!isExpanded && !cache.containsKey(cacheKey)) {
                         List<Map<String, dynamic>> details;
                         if (isExpense) {
                           details = await DatabaseHelper.instance.getExpenseDetailsByAccount(
@@ -1665,7 +1673,7 @@ class _AccountViewState extends State<_AccountView> {
                             accountName: accountData.key,
                           );
                         }
-                        cache[accountData.key] = details;
+                        cache[cacheKey] = details;
                       }
                       expandedMap[accountData.key] = !isExpanded;
                       onToggle(accountData.key);
@@ -1714,8 +1722,8 @@ class _AccountViewState extends State<_AccountView> {
                       ),
                     ),
                   ),
-                  if (isExpanded && cache.containsKey(accountData.key))
-                    _buildAccountDetailList(cache[accountData.key]!, color),
+                  if (isExpanded && cache.containsKey(cacheKey))
+                    _buildAccountDetailList(cache[cacheKey]!, color),
                 ],
               );
             }),
@@ -1740,7 +1748,7 @@ class _AccountViewState extends State<_AccountView> {
         borderRadius: BorderRadius.circular(8.r),
       ),
       child: Column(
-        children: details.take(10).map((detail) {
+        children: details.map((detail) {
           final date = DateTime.parse(detail['date'] as String);
           final amount = (detail['amount'] as num).toDouble();
           final merchant = detail['merchant'] as String?;
@@ -2001,15 +2009,23 @@ class _SimplePieChart extends StatelessWidget {
   }
 }
 
-class _CategoryListView extends StatelessWidget {
+class _CategoryListView extends StatefulWidget {
   final Map<String, dynamic>? data;
   final int transactionType;
   final int selectedPeriodType;
 
   const _CategoryListView({this.data, required this.transactionType, required this.selectedPeriodType});
 
+  @override
+  State<_CategoryListView> createState() => _CategoryListViewState();
+}
+
+class _CategoryListViewState extends State<_CategoryListView> {
+  final Map<String, bool> _expandedCategories = {};
+  Map<String, List<Map<String, dynamic>>> _detailsCache = {};
+
   String _getPeriodLabel() {
-    switch (selectedPeriodType) {
+    switch (widget.selectedPeriodType) {
       case 0:
         return '本日';
       case 1:
@@ -2027,13 +2043,15 @@ class _CategoryListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isExpense = transactionType == 0;
-    final categoryData = isExpense 
-        ? (data?['expenseCategoryData'] as Map<String, double>? ?? {})
-        : (data?['incomeCategoryData'] as Map<String, double>? ?? {});
-    final total = isExpense 
-        ? (data?['totalExpense'] as double? ?? 0.0)
-        : (data?['totalIncome'] as double? ?? 0.0);
+    final isExpense = widget.transactionType == 0;
+    final categoryData = isExpense
+        ? (widget.data?['expenseCategoryData'] as Map<String, double>? ?? {})
+        : (widget.data?['incomeCategoryData'] as Map<String, double>? ?? {});
+    final total = isExpense
+        ? (widget.data?['totalExpense'] as double? ?? 0.0)
+        : (widget.data?['totalIncome'] as double? ?? 0.0);
+    final start = widget.data?['start'] as DateTime? ?? DateTime.now();
+    final end = widget.data?['end'] as DateTime? ?? DateTime.now();
 
     final sortedCategories = categoryData.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
@@ -2084,51 +2102,185 @@ class _CategoryListView extends StatelessWidget {
                 final category = entry.value;
                 final percentage = total > 0 ? category.value / total : 0.0;
                 final color = colors[index % colors.length];
+                final isExpanded = _expandedCategories[category.key] ?? false;
 
-                return Container(
-                  margin: EdgeInsets.only(bottom: 12.h),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 12.w,
-                        height: 12.w,
-                        decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(3.r)),
-                      ),
-                      SizedBox(width: 12.w),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                return Column(
+                  children: [
+                    GestureDetector(
+                      onTap: () async {
+                        if (!isExpanded && !_detailsCache.containsKey(category.key)) {
+                          List<Map<String, dynamic>> details;
+                          if (isExpense) {
+                            details = await DatabaseHelper.instance.getExpenseDetailsByCategory(
+                              start: start,
+                              end: end,
+                              categoryName: category.key,
+                            );
+                          } else {
+                            details = await DatabaseHelper.instance.getIncomeDetailsByCategory(
+                              start: start,
+                              end: end,
+                              categoryName: category.key,
+                            );
+                          }
+                          _detailsCache[category.key] = details;
+                        }
+                        setState(() {
+                          _expandedCategories[category.key] = !isExpanded;
+                        });
+                      },
+                      child: Container(
+                        margin: EdgeInsets.only(bottom: 12.h),
+                        child: Row(
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(category.key, style: TextStyle(fontSize: 14.sp, color: Colors.grey[900])),
-                                Text('¥${category.value.toStringAsFixed(2)}', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500, color: Colors.grey[900])),
-                              ],
+                            Container(
+                              width: 12.w,
+                              height: 12.w,
+                              decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(3.r)),
                             ),
-                            SizedBox(height: 6.h),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(4.r),
-                              child: LinearProgressIndicator(
-                                value: percentage,
-                                backgroundColor: Colors.grey[200],
-                                valueColor: AlwaysStoppedAnimation<Color>(color),
-                                minHeight: 8.h,
+                            SizedBox(width: 12.w),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(category.key, style: TextStyle(fontSize: 14.sp, color: Colors.grey[900])),
+                                      Text('¥${category.value.toStringAsFixed(2)}', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500, color: Colors.grey[900])),
+                                    ],
+                                  ),
+                                  SizedBox(height: 6.h),
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(4.r),
+                                    child: LinearProgressIndicator(
+                                      value: percentage,
+                                      backgroundColor: Colors.grey[200],
+                                      valueColor: AlwaysStoppedAnimation<Color>(color),
+                                      minHeight: 8.h,
+                                    ),
+                                  ),
+                                ],
                               ),
+                            ),
+                            SizedBox(width: 12.w),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text('${(percentage * 100).toStringAsFixed(1)}%', style: TextStyle(fontSize: 13.sp, color: Colors.grey[400])),
+                                SizedBox(height: 2.h),
+                                Icon(
+                                  isExpanded ? Icons.expand_less : Icons.expand_more,
+                                  color: Colors.grey[400],
+                                  size: 20,
+                                ),
+                              ],
                             ),
                           ],
                         ),
                       ),
-                      SizedBox(width: 12.w),
-                      Text('${(percentage * 100).toStringAsFixed(1)}%', style: TextStyle(fontSize: 13.sp, color: Colors.grey[400])),
-                    ],
-                  ),
+                    ),
+                    if (isExpanded && _detailsCache.containsKey(category.key))
+                      _buildDetailList(_detailsCache[category.key]!, color),
+                  ],
                 );
               }),
             ],
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildDetailList(List<Map<String, dynamic>> details, Color color) {
+    if (details.isEmpty) {
+      return Container(
+        margin: EdgeInsets.only(bottom: 12.h, left: 24.w),
+        padding: EdgeInsets.all(12.w),
+        decoration: BoxDecoration(
+          color: Colors.grey[50],
+          borderRadius: BorderRadius.circular(8.r),
+        ),
+        child: Text(
+          '暂无明细',
+          style: TextStyle(fontSize: 12.sp, color: Colors.grey[400]),
+        ),
+      );
+    }
+
+    return Container(
+      margin: EdgeInsets.only(bottom: 12.h, left: 24.w),
+      padding: EdgeInsets.all(12.w),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(8.r),
+      ),
+      child: Column(
+        children: details.map((detail) {
+          final date = DateTime.parse(detail['date'] as String);
+          final amount = (detail['amount'] as num).toDouble();
+          final merchant = detail['merchant'] as String?;
+          final accountName = detail['account_name'] as String?;
+          final remark = detail['remark'] as String?;
+
+          return Container(
+            padding: EdgeInsets.symmetric(vertical: 8.h),
+            decoration: BoxDecoration(
+              border: Border(bottom: BorderSide(color: Colors.grey[200]!, width: 0.5)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${date.month}-${date.day} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}',
+                        style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
+                      ),
+                      if (merchant != null && merchant.isNotEmpty)
+                        Text(
+                          merchant,
+                          style: TextStyle(fontSize: 12.sp, color: Colors.grey[500]),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    accountName ?? '',
+                    style: TextStyle(fontSize: 11.sp, color: Colors.grey[400]),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.right,
+                  ),
+                ),
+                SizedBox(width: 8.w),
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    remark ?? '',
+                    style: TextStyle(fontSize: 11.sp, color: Colors.grey[400]),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.right,
+                  ),
+                ),
+                SizedBox(width: 8.w),
+                Text(
+                  '¥${amount.toStringAsFixed(2)}',
+                  style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600, color: color),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      ),
     );
   }
 }
